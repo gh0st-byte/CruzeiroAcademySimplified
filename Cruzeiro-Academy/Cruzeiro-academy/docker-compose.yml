@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Cruzeiro@1921
+      POSTGRES_DB: admin_db
+    container_name: postgres-db
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  backend:
+    build: ./backend/CmsCruzeiro
+    container_name: keystone
+    command: npm run dev
+    environment:
+      - DATABASE_URL=postgresql://postgres:Cruzeiro%401921@db:5432/admin_db
+      - SESSION_SECRET=Cruzeiro@1921_super_secure_session_secret_key_for_development
+      - PORT=3000
+    volumes:
+      - ./backend/CmsCruzeiro:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: react-frontend
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

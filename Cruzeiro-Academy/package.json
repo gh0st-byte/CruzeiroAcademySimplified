@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "perfect-debounce": "^2.0.0"
+  }
+}
