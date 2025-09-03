@@ -2,7 +2,7 @@
 
 Sistema de Gestão de Conteúdo (CMS) multi-tenant para Cruzeiro Academy com arquitetura Keystone stateless, autenticação JWT, controle de acesso por roles e filtros geográficos automáticos via CloudFront.
 
-## 🏗️ Arquitetura
+##  Arquitetura
 
 ### Características Principais
 
@@ -26,7 +26,7 @@ Sistema de Gestão de Conteúdo (CMS) multi-tenant para Cruzeiro Academy com arq
 - **Validation**: Joi para validação de entrada
 - **Cloud**: AWS (S3, Secrets Manager, CloudWatch)
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Pré-requisitos
 
@@ -41,21 +41,21 @@ psql --version
 aws --version
 ```
 
-### ⚠️ Status do Projeto
+###  Status do Projeto
 
-**✅ BUGS CORRIGIDOS - Janeiro 2025**
+** BUGS CORRIGIDOS - Janeiro 2025**
 
 Todos os principais bugs foram identificados e corrigidos:
 
-1. **✅ Keystone.js Fixed**: Schema atualizado para compatibilidade com a estrutura do banco
-2. **✅ Database Schema**: CruzeiroAcademy.sql aplicado com sucesso
-3. **✅ Dependencies**: Todas as dependências instaladas e atualizadas  
-4. **✅ ES Modules**: Problemas de import/export resolvidos
-5. **✅ Controllers**: LocationTagController e ContentController funcionando
-6. **✅ Authentication**: Sistema JWT implementado corretamente
-7. **✅ Multi-tenancy**: Filtragem por país/escola funcionando
-8. **✅ Database Connection**: Pool de conexões PostgreSQL configurado
-9. **✅ Health Checks**: Endpoints de saúde implementados e testados
+1. ** Keystone.js Fixed**: Schema atualizado para compatibilidade com a estrutura do banco
+2. ** Database Schema**: CruzeiroAcademy.sql aplicado com sucesso
+3. ** Dependencies**: Todas as dependências instaladas e atualizadas  
+4. ** ES Modules**: Problemas de import/export resolvidos
+5. ** Controllers**: LocationTagController e ContentController funcionando
+6. ** Authentication**: Sistema JWT implementado corretamente
+7. ** Multi-tenancy**: Filtragem por país/escola funcionando
+8. ** Database Connection**: Pool de conexões PostgreSQL configurado
+9. ** Health Checks**: Endpoints de saúde implementados e testados
 
 ### 1. Instalação
 
@@ -120,7 +120,7 @@ npm start
 tail -f logs/app.log
 ```
 
-## 📚 API Documentation
+##  API Documentation
 
 ### Base URL
 ```
@@ -136,7 +136,7 @@ Authorization: Bearer <access_token>
 
 ### Endpoints Principais
 
-#### 🔐 Autenticação
+####  Autenticação
 ```bash
 # Login
 POST /api/v1/auth/login
@@ -158,7 +158,7 @@ POST /api/v1/auth/logout
 GET /api/v1/auth/me
 ```
 
-#### 🌍 APIs Públicas (Filtradas por País)
+####  APIs Públicas (Filtradas por País)
 ```bash
 # Listar conteúdos (filtrados automaticamente por CloudFront-Viewer-Country)
 GET /api/v1/public/contents?page=1&limit=20&category=noticias
@@ -176,7 +176,7 @@ GET /api/v1/public/schools
 GET /api/v1/public/search?q=futebol&limit=10
 ```
 
-#### 🛠️ APIs Administrativas
+####  APIs Administrativas
 ```bash
 # Conteúdos (CRUD completo)
 GET /api/v1/admin/contents
@@ -206,7 +206,7 @@ GET /api/v1/admin/settings
 PUT /api/v1/admin/settings/site_title
 ```
 
-#### 🔍 Monitoramento
+####  Monitoramento
 ```bash
 # Health check
 GET /health
@@ -221,7 +221,7 @@ GET /metrics
 GET /info
 ```
 
-## 🏢 Multi-Tenancy
+##  Multi-Tenancy
 
 ### Como Funciona
 
@@ -246,7 +246,7 @@ JP -> JPN -> Cruzeiro Academy Japan (tenant_id)
 5. **Colômbia** (`COL`) - `co.cruzeiroacademy.com`
 6. **Tailândia** (`THA`) - `th.cruzeiroacademy.com`
 
-## 🔐 Sistema de Roles
+##  Sistema de Roles
 
 ### Hierarquia de Permissões
 
@@ -266,7 +266,7 @@ app.use('/admin/users', requireAdminAccess);
 app.use('/admin/contents', requireWriteAccess); // admin + editor
 ```
 
-## 🗄️ Estrutura do Banco de Dados
+##  Estrutura do Banco de Dados
 
 ### Tabelas Principais
 
@@ -290,7 +290,7 @@ contents N:1 cms_users (author)
 contents 1:N media_files
 ```
 
-## 🔄 Migrations
+##  Migrations
 
 ### Executar Migrations
 
@@ -321,7 +321,7 @@ touch src/migrations/sql/20250829120000_add_new_feature.sql
 touch src/migrations/sql/rollbacks/20250829120000_rollback.sql
 ```
 
-## 📤 Upload de Arquivos
+##  Upload de Arquivos
 
 ### Upload Direto (Multipart)
 
@@ -352,7 +352,7 @@ curl -X PUT "PRESIGNED_URL" \
   --data-binary @my-image.jpg
 ```
 
-## 🚀 Deploy
+##  Deploy
 
 ### Docker (Recomendado)
 
@@ -456,7 +456,7 @@ S3_BUCKET_NAME=cruzeiro-academy-media-prod
 S3_CLOUDFRONT_DOMAIN=media.cruzeiroacademy.com
 ```
 
-## 🔍 Monitoramento e Logs
+##  Monitoramento e Logs
 
 ### Health Checks
 
@@ -505,7 +505,7 @@ logger.audit('content_created', 'contents', userId, tenantId, {
 });
 ```
 
-## 🛠️ Desenvolvimento
+##  Desenvolvimento
 
 ### Estrutura do Código
 
@@ -556,7 +556,7 @@ DEBUG=cms:* npm run dev
 DEBUG=cms:auth,cms:database npm run dev
 ```
 
-## 🔒 Segurança
+##  Segurança
 
 ### Medidas Implementadas
 
@@ -579,7 +579,7 @@ CORS_ORIGIN=https://*.cruzeiroacademy.com,http://localhost:*
 CORS_ORIGIN=https://cms.cruzeiroacademy.com,https://br.cruzeiroacademy.com
 ```
 
-## 📋 Troubleshooting
+##  Troubleshooting
 
 ### Problemas Comuns
 
@@ -639,30 +639,28 @@ GET /api/v1/admin/audit-logs?operation=LOGIN
 SELECT * FROM pg_stat_activity WHERE datname = 'cruzeiro_academy';
 ```
 
-## 🤝 Contribuição
-
-### Workflow
-
-1. Fork do repositório
-2. Branch para feature: `git checkout -b feature/nova-funcionalidade`
-3. Commit: `git commit -m 'feat: adicionar nova funcionalidade'`
-4. Push: `git push origin feature/nova-funcionalidade`
-5. Pull Request
 
 ### Padrões
 
-- **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`)
 - **Code Style**: ESLint + Prettier
 - **Testing**: Jest para testes unitários
-- **Documentation**: JSDoc para funções
 
-## 📄 Licença
+## Documentation
+- [**KeystoneJ**](https://keystonejs.com/docs)
+- [**Vite**](https://vite.dev/guide/)
+- [**React**](https://react.dev/learn)
+- [**PostgreeSQL**](https://www.postgresql.org/docs/)
+- [**Docker**](https://docs.docker.com/)
+- [**UbuntuServer**](https://documentation.ubuntu.com/server/)
+- [**AWS-ECS**](https://docs.aws.amazon.com/ecs/)
 
-MIT © Cruzeiro Academy Team
+##  Licença
+
+© Cruzeiro Espote Clube - SAF
 
 ---
 
-## 🔗 Links Úteis
+##  Links Úteis
 
 - [API Documentation](http://localhost:3000/api/v1/docs)
 - [Health Check](http://localhost:3000/health)
