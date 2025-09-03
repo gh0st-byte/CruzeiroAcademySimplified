@@ -17,7 +17,7 @@ Sistema de Gestão de Conteúdo (CMS) multi-tenant para Cruzeiro Academy com arq
 
 ### Tecnologias Utilizadas
 
-- **Runtime**: Node.js 18+ com ES Modules
+- **Runtime**: Node.js 22+ com ES Modules
 - **Framework**: Express.js com middleware personalizados
 - **Database**: PostgreSQL com conexão pooled
 - **Storage**: AWS S3 para arquivos/mídia
@@ -31,10 +31,10 @@ Sistema de Gestão de Conteúdo (CMS) multi-tenant para Cruzeiro Academy com arq
 ### Pré-requisitos
 
 ```bash
-# Node.js 18+
+# Node.js 22+
 node --version
 
-# PostgreSQL 14+
+# PostgreSQL 17+
 psql --version
 
 # AWS CLI configurado (opcional)
@@ -43,19 +43,7 @@ aws --version
 
 ###  Status do Projeto
 
-** BUGS CORRIGIDOS - Janeiro 2025**
-
-Todos os principais bugs foram identificados e corrigidos:
-
-1. ** Keystone.js Fixed**: Schema atualizado para compatibilidade com a estrutura do banco
-2. ** Database Schema**: CruzeiroAcademy.sql aplicado com sucesso
-3. ** Dependencies**: Todas as dependências instaladas e atualizadas  
-4. ** ES Modules**: Problemas de import/export resolvidos
-5. ** Controllers**: LocationTagController e ContentController funcionando
-6. ** Authentication**: Sistema JWT implementado corretamente
-7. ** Multi-tenancy**: Filtragem por país/escola funcionando
-8. ** Database Connection**: Pool de conexões PostgreSQL configurado
-9. ** Health Checks**: Endpoints de saúde implementados e testados
+**EM ANDAMENTO**
 
 ### 1. Instalação
 
