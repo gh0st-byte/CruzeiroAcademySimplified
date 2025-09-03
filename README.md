@@ -1,4 +1,4 @@
-# 🏆 Cruzeiro Academy CMS
+#  Cruzeiro Academy CMS
 
 Um sistema de gerenciamento de conteúdo (CMS) headless multi-tenant desenvolvido para a Cruzeiro Academy, utilizando KeystoneJS 6, React e PostgreSQL.
 
