@@ -42,7 +42,7 @@ model CmsUser {
   tenant                School?       @relation("CmsUser_tenant", fields: [tenantId], references: [id])
   tenantId              String?       @map("tenant")
   email                 String        @unique @default("")
-  password              String?
+  password_hash         String?
   first_name            String        @default("")
   last_name             String        @default("")
   role                  String?       @default("editor")
