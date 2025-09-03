@@ -11,15 +11,389 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model CmsUser {
-  id            String    @id @default(cuid())
-  email         String    @unique @default("")
-  password_hash String?   @map("password_hash")
-  first_name    String    @default("")
-  last_name     String    @default("")
-  role          String?   @default("editor")
-  is_active     Boolean   @default(true)
-  last_login    DateTime?
+model School {
+  id                   String            @id @default(cuid())
+  name                 String            @default("")
+  country              String            @default("")
+  country_name         String            @default("")
+  timezone             String            @default("")
+  language             String            @default("pt-BR")
+  currency             String            @default("BRL")
+  domain               String            @unique @default("")
+  slug                 String            @unique @default("")
+  status               String?           @default("active")
+  settings             Json?             @default("{}")
+  created_at           DateTime?         @default(now())
+  updated_at           DateTime?         @default(now())
+  cms_users            CmsUser[]         @relation("CmsUser_tenant")
+  contents             Content[]         @relation("Content_tenant")
+  categories           ContentCategory[] @relation("ContentCategory_tenant")
+  media_files          MediaFile[]       @relation("MediaFile_tenant")
+  navigation_menus     NavigationMenu[]  @relation("NavigationMenu_tenant")
+  site_settings        SiteSetting[]     @relation("SiteSetting_tenant")
+  sections             Section[]         @relation("Section_tenant")
+  from_AuditLog_tenant AuditLog[]        @relation("AuditLog_tenant")
 
+  @@map("schools")
+}
+
+model CmsUser {
+  id                    String        @id @default(cuid())
+  tenant                School?       @relation("CmsUser_tenant", fields: [tenantId], references: [id])
+  tenantId              String?       @map("tenant")
+  email                 String        @unique @default("")
+  password              String?
+  first_name            String        @default("")
+  last_name             String        @default("")
+  role                  String?       @default("editor")
+  avatar_url            String        @default("")
+  is_active             Boolean       @default(true)
+  last_login            DateTime?
+  created_at            DateTime?     @default(now())
+  updated_at            DateTime?     @default(now())
+  authored_contents     Content[]     @relation("Content_author")
+  uploaded_media        MediaFile[]   @relation("MediaFile_uploaded_by")
+  updated_settings      SiteSetting[] @relation("SiteSetting_updated_by")
+  from_AuditLog_user    AuditLog[]    @relation("AuditLog_user")
+  from_UserSession_user UserSession[] @relation("UserSession_user")
+
+  @@index([tenantId])
   @@map("cms_users")
+}
+
+model ContentCategory {
+  id          String            @id @default(cuid())
+  tenant      School?           @relation("ContentCategory_tenant", fields: [tenantId], references: [id])
+  tenantId    String?           @map("tenant")
+  name        String            @default("")
+  slug        String            @default("")
+  description String            @default("")
+  parent      ContentCategory?  @relation("ContentCategory_parent", fields: [parentId], references: [id])
+  parentId    String?           @map("parent")
+  children    ContentCategory[] @relation("ContentCategory_parent")
+  sort_order  Int?              @default(0)
+  is_active   Boolean           @default(true)
+  created_at  DateTime?         @default(now())
+  updated_at  DateTime?         @default(now())
+  contents    Content[]         @relation("Content_category")
+
+  @@index([tenantId])
+  @@index([parentId])
+  @@map("content_categories")
+}
+
+model Content {
+  id                 String               @id @default(cuid())
+  tenant             School?              @relation("Content_tenant", fields: [tenantId], references: [id])
+  tenantId           String?              @map("tenant")
+  category           ContentCategory?     @relation("Content_category", fields: [categoryId], references: [id])
+  categoryId         String?              @map("category")
+  author             CmsUser?             @relation("Content_author", fields: [authorId], references: [id])
+  authorId           String?              @map("author")
+  title              String               @default("")
+  slug               String               @default("")
+  excerpt            String               @default("")
+  body               String               @default("")
+  featured_image_url String               @default("")
+  meta_title         String               @default("")
+  meta_description   String               @default("")
+  status             String?              @default("draft")
+  language           String               @default("pt-BR")
+  content_type       String?              @default("article")
+  is_featured        Boolean              @default(false)
+  view_count         Int?                 @default(0)
+  sort_order         Int?                 @default(0)
+  published_at       DateTime?
+  expires_at         DateTime?
+  scheduled_at       DateTime?
+  seo_settings       Json?                @default("{}")
+  custom_fields      Json?                @default("{}")
+  created_at         DateTime?            @default(now())
+  updated_at         DateTime?            @default(now())
+  menu_items         NavigationMenuItem[] @relation("NavigationMenuItem_content")
+
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([authorId])
+  @@map("contents")
+}
+
+model MediaFile {
+  id                String          @id @default(cuid())
+  tenant            School?         @relation("MediaFile_tenant", fields: [tenantId], references: [id])
+  tenantId          String?         @map("tenant")
+  uploaded_by       CmsUser?        @relation("MediaFile_uploaded_by", fields: [uploaded_byId], references: [id])
+  uploaded_byId     String?         @map("uploaded_by")
+  filename          String          @default("")
+  original_filename String          @default("")
+  file_path         String          @default("")
+  file_url          String          @default("")
+  mime_type         String          @default("")
+  file_size         BigInt
+  width             Int?
+  height            Int?
+  alt_text          String          @default("")
+  caption           String          @default("")
+  is_active         Boolean         @default(true)
+  created_at        DateTime?       @default(now())
+  updated_at        DateTime?       @default(now())
+  carousel_images   CarouselImage[] @relation("CarouselImage_media")
+  image_banners     ImageBanner[]   @relation("ImageBanner_media")
+
+  @@index([tenantId])
+  @@index([uploaded_byId])
+  @@map("media_files")
+}
+
+model NavigationMenu {
+  id         String               @id @default(cuid())
+  tenant     School?              @relation("NavigationMenu_tenant", fields: [tenantId], references: [id])
+  tenantId   String?              @map("tenant")
+  name       String               @default("")
+  slug       String               @default("")
+  location   String
+  is_active  Boolean              @default(true)
+  created_at DateTime?            @default(now())
+  updated_at DateTime?            @default(now())
+  menu_items NavigationMenuItem[] @relation("NavigationMenuItem_menu")
+
+  @@index([tenantId])
+  @@map("navigation_menus")
+}
+
+model NavigationMenuItem {
+  id         String               @id @default(cuid())
+  menu       NavigationMenu?      @relation("NavigationMenuItem_menu", fields: [menuId], references: [id])
+  menuId     String?              @map("menu")
+  parent     NavigationMenuItem?  @relation("NavigationMenuItem_parent", fields: [parentId], references: [id])
+  parentId   String?              @map("parent")
+  children   NavigationMenuItem[] @relation("NavigationMenuItem_parent")
+  title      String               @default("")
+  url        String               @default("")
+  content    Content?             @relation("NavigationMenuItem_content", fields: [contentId], references: [id])
+  contentId  String?              @map("content")
+  target     String?              @default("_self")
+  css_class  String               @default("")
+  sort_order Int?                 @default(0)
+  is_active  Boolean              @default(true)
+  created_at DateTime?            @default(now())
+  updated_at DateTime?            @default(now())
+
+  @@index([menuId])
+  @@index([parentId])
+  @@index([contentId])
+  @@map("navigation_menu_items")
+}
+
+model SiteSetting {
+  id            String    @id @default(cuid())
+  tenant        School?   @relation("SiteSetting_tenant", fields: [tenantId], references: [id])
+  tenantId      String?   @map("tenant")
+  setting_key   String    @default("")
+  setting_value String    @default("")
+  setting_type  String?   @default("text")
+  description   String    @default("")
+  is_public     Boolean   @default(false)
+  updated_by    CmsUser?  @relation("SiteSetting_updated_by", fields: [updated_byId], references: [id])
+  updated_byId  String?   @map("updated_by")
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @default(now())
+
+  @@index([tenantId])
+  @@index([updated_byId])
+  @@map("site_settings")
+}
+
+model Section {
+  id          String    @id @default(cuid())
+  tenant      School?   @relation("Section_tenant", fields: [tenantId], references: [id])
+  tenantId    String?   @map("tenant")
+  key         String    @unique @default("")
+  title       String    @default("")
+  description String    @default("")
+  is_active   Boolean   @default(true)
+  sort_order  Int?      @default(0)
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now())
+  blocks      Block[]   @relation("Block_section")
+
+  @@index([tenantId])
+  @@map("sections")
+}
+
+model Block {
+  id             String       @id @default(cuid())
+  section        Section?     @relation("Block_section", fields: [sectionId], references: [id])
+  sectionId      String?      @map("section")
+  type           String
+  title          String       @default("")
+  order          Int?         @default(0)
+  visible        Boolean      @default(true)
+  data           Json?        @default("{}")
+  created_at     DateTime?    @default(now())
+  updated_at     DateTime?    @default(now())
+  carousel       Carousel?    @relation("Block_carousel", fields: [carouselId], references: [id])
+  carouselId     String?      @unique @map("carousel")
+  rich_text      RichText?    @relation("Block_rich_text", fields: [rich_textId], references: [id])
+  rich_textId    String?      @unique @map("rich_text")
+  image_banner   ImageBanner? @relation("Block_image_banner", fields: [image_bannerId], references: [id])
+  image_bannerId String?      @unique @map("image_banner")
+  video_embed    VideoEmbed?  @relation("Block_video_embed", fields: [video_embedId], references: [id])
+  video_embedId  String?      @unique @map("video_embed")
+  custom_block   CustomBlock? @relation("Block_custom_block", fields: [custom_blockId], references: [id])
+  custom_blockId String?      @unique @map("custom_block")
+
+  @@index([sectionId])
+  @@map("blocks")
+}
+
+model Carousel {
+  id           String          @id @default(cuid())
+  block        Block?          @relation("Block_carousel")
+  name         String          @default("")
+  autoplay     Boolean         @default(true)
+  interval_ms  Int?            @default(5000)
+  show_arrows  Boolean         @default(true)
+  show_dots    Boolean         @default(true)
+  aspect_ratio String          @default("16:9")
+  created_at   DateTime?       @default(now())
+  updated_at   DateTime?       @default(now())
+  images       CarouselImage[] @relation("CarouselImage_carousel")
+
+  @@map("carousels")
+}
+
+model CarouselImage {
+  id         String     @id @default(cuid())
+  carousel   Carousel?  @relation("CarouselImage_carousel", fields: [carouselId], references: [id])
+  carouselId String?    @map("carousel")
+  media      MediaFile? @relation("CarouselImage_media", fields: [mediaId], references: [id])
+  mediaId    String?    @map("media")
+  url        String     @default("")
+  alt        String     @default("")
+  caption    String     @default("")
+  link_url   String     @default("")
+  order      Int?       @default(0)
+  is_active  Boolean    @default(true)
+  created_at DateTime?  @default(now())
+  updated_at DateTime?  @default(now())
+
+  @@index([carouselId])
+  @@index([mediaId])
+  @@map("carousel_images")
+}
+
+model RichText {
+  id         String    @id @default(cuid())
+  block      Block?    @relation("Block_rich_text")
+  name       String    @default("")
+  content    Json?
+  text_align String?   @default("left")
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+
+  @@map("rich_texts")
+}
+
+model ImageBanner {
+  id               String     @id @default(cuid())
+  block            Block?     @relation("Block_image_banner")
+  name             String     @default("")
+  media            MediaFile? @relation("ImageBanner_media", fields: [mediaId], references: [id])
+  mediaId          String?    @map("media")
+  url              String     @default("")
+  alt              String     @default("")
+  link_url         String     @default("")
+  overlay_text     String     @default("")
+  overlay_position String?    @default("center")
+  created_at       DateTime?  @default(now())
+  updated_at       DateTime?  @default(now())
+
+  @@index([mediaId])
+  @@map("image_banners")
+}
+
+model VideoEmbed {
+  id            String    @id @default(cuid())
+  block         Block?    @relation("Block_video_embed")
+  name          String    @default("")
+  provider      String
+  video_id      String    @default("")
+  video_url     String    @default("")
+  title         String    @default("")
+  description   String    @default("")
+  thumbnail_url String    @default("")
+  autoplay      Boolean   @default(false)
+  controls      Boolean   @default(true)
+  mute          Boolean   @default(false)
+  loop          Boolean   @default(false)
+  aspect_ratio  String    @default("16:9")
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @default(now())
+
+  @@map("video_embeds")
+}
+
+model CustomBlock {
+  id             String    @id @default(cuid())
+  block          Block?    @relation("Block_custom_block")
+  name           String    @default("")
+  component_name String    @default("")
+  data           Json?     @default("{}")
+  css_classes    String    @default("")
+  inline_styles  Json?     @default("{}")
+  created_at     DateTime? @default(now())
+  updated_at     DateTime? @default(now())
+
+  @@map("custom_blocks")
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  tenant     School?   @relation("AuditLog_tenant", fields: [tenantId], references: [id])
+  tenantId   String?   @map("tenant")
+  user       CmsUser?  @relation("AuditLog_user", fields: [userId], references: [id])
+  userId     String?   @map("user")
+  table_name String    @default("")
+  record_id  String    @default("")
+  operation  String
+  old_values Json?
+  new_values Json?
+  ip_address String    @default("")
+  user_agent String    @default("")
+  session_id String    @default("")
+  created_at DateTime? @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+model UserSession {
+  id            String    @id @default(cuid())
+  user          CmsUser?  @relation("UserSession_user", fields: [userId], references: [id])
+  userId        String?   @map("user")
+  session_token String    @unique @default("")
+  ip_address    String    @default("")
+  user_agent    String    @default("")
+  is_active     Boolean   @default(true)
+  expires_at    DateTime
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @default(now())
+
+  @@index([userId])
+  @@map("user_sessions")
+}
+
+model ConnectionStat {
+  id                 String   @id @default(cuid())
+  timestamp          DateTime @default(now())
+  active_connections Int
+  total_connections  Int
+  slow_queries       Int?     @default(0)
+  cpu_usage          Float?
+  memory_usage       Float?
+  disk_usage         Float?
+
+  @@map("connection_stats")
 }

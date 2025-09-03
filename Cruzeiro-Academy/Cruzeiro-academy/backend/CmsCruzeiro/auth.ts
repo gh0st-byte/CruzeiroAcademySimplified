@@ -1,43 +1,26 @@
-// Welcome to some authentication for Keystone
-//
-// This is using @keystone-6/auth to add the following
-// - A sign-in page for your Admin UI
-// - A cookie-based stateless session strategy
-//    - Using a User email as the identifier
-//    - 30 day cookie expiration
-//
-// This file does not configure what Users can do, and the default for this starter
-// project is to allow anyone - logged-in or not - to do anything.
-//
-// If you want to prevent random people on the internet from accessing your data,
-// you can find out how by reading https://keystonejs.com/docs/guides/auth-and-access-control
-//
-// If you want to learn more about how our out-of-the-box authentication works, please
-// read https://keystonejs.com/docs/apis/auth#authentication-api
+// =================================================================
+// CRUZEIRO ACADEMY CMS - AUTHENTICATION CONFIGURATION
+// Multi-tenant authentication using CmsUser entity
+// =================================================================
 
 import { randomBytes } from 'node:crypto'
 import { createAuth } from '@keystone-6/auth'
-
-// see https://keystonejs.com/docs/apis/session for the session docs
 import { statelessSessions } from '@keystone-6/core/session'
 
-// withAuth is a function we can use to wrap our base configuration
+// Multi-tenant authentication configuration
 const { withAuth } = createAuth({
-  listKey: 'CmsUser', // Updated to match the schema list name
+  listKey: 'CmsUser',
   identityField: 'email',
-  sessionData: 'first_name last_name email role is_active created_at',
-  secretField: 'password_hash',
+  sessionData: 'id tenant { id name slug country } first_name last_name email role is_active created_at',
+  secretField: 'password',
 
-  // WARNING: remove initFirstItem functionality in production
-  //   see https://keystonejs.com/docs/config/auth#init-first-item for more
+  // Initial user creation for first setup
   initFirstItem: {
-    // if there are no items in the database, by configuring this field
-    //   you are asking the Keystone AdminUI to create a new user
-    //   providing inputs for these fields
-    fields: ['first_name', 'last_name', 'email', 'password_hash'],
-
-    // it uses context.sudo() to do this, which bypasses any access control you might have
-    //   you shouldn't use this in production
+    fields: ['tenant', 'first_name', 'last_name', 'email', 'password', 'role'],
+    itemData: {
+      role: 'super_admin',
+      is_active: true,
+    },
   },
 })
 

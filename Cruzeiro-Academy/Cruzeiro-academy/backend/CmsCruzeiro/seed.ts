@@ -44,15 +44,8 @@ async function main() {
   console.log(`✓ Admin user created: ${adminUser.email}`);
   
   // Create default content category
-  const newsCategory = await prisma.contentCategory.upsert({
-    where: {
-      tenant_id_slug: {
-        tenant_id: defaultSchool.id,
-        slug: 'noticias'
-      }
-    },
-    update: {},
-    create: {
+  const newsCategory = await prisma.contentCategory.create({
+    data: {
       name: 'Notícias',
       slug: 'noticias',
       description: 'Notícias e novidades da academia',
