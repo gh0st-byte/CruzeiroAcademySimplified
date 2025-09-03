@@ -297,9 +297,9 @@ BEGIN
         INSERT INTO site_settings (tenant_id, setting_key, setting_value, setting_type, description, is_public) VALUES
         (school_rec.id, 'site_title', 'Cruzeiro Academy', 'text', 'Título do site', true),
         (school_rec.id, 'site_description', 'Academia de futebol Cruzeiro', 'text', 'Descrição do site', true),
-        (school_rec.id, 'contact_email', 'contato@cruzeiroacademy.com', 'text', 'E-mail de contato', true),
-        (school_rec.id, 'social_facebook', 'https://facebook.com/cruzeiroacademy', 'text', 'URL do Facebook', true),
-        (school_rec.id, 'social_instagram', 'https://instagram.com/cruzeiroacademy', 'text', 'URL do Instagram', true),
+        --(school_rec.id, 'contact_email', 'contato@cruzeiroacademy.com', 'text', 'E-mail de contato', true),
+        --(school_rec.id, 'social_facebook', 'https://facebook.com/cruzeiroacademy', 'text', 'URL do Facebook', true),
+        --(school_rec.id, 'social_instagram', 'https://instagram.com/cruzeiroacademy', 'text', 'URL do Instagram', true),
         (school_rec.id, 'analytics_enabled', 'true', 'boolean', 'Habilitar Google Analytics', false),
         (school_rec.id, 'maintenance_mode', 'false', 'boolean', 'Modo de manutenção', false);
     END LOOP;

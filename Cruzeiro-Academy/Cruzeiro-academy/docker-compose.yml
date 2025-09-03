@@ -17,8 +17,8 @@ services:
     container_name: keystone
     command: npm run dev
     environment:
-      - DATABASE_URL=postgresql://postgres:Cruzeiro%401921@db:5432/admin_db
-      - SESSION_SECRET=Cruzeiro@1921_super_secure_session_secret_key_for_development
+      - DATABASE_URL=postgresql://cruzeiro:cruzeiro1921@db:5432/cruzeiro_academy
+      - SESSION_SECRET=cruzeiro1921
       - PORT=3000
     volumes:
       - ./backend/CmsCruzeiro:/app
