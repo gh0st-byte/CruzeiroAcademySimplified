@@ -29,10 +29,17 @@ export const lists = {
       name: text({ validation: { isRequired: true } }),
       country: text({ validation: { isRequired: true } }),
       country_name: text({ validation: { isRequired: true } }),
-      timezone: text({ validation: { isRequired: true } }),
-      language: text({ validation: { isRequired: true }, defaultValue: 'pt-BR' }),
-      currency: text({ validation: { isRequired: true }, defaultValue: 'BRL' }),
-      domain: text({ isIndexed: 'unique' }),
+      language: select({
+        options: [
+          { label: 'Português (Brasil)', value: 'pt-BR' },
+          { label: 'Inglês (EUA)', value: 'en-US' },
+          { label: 'Espanhol (Colombia e Peru)', value: 'es-ES' },
+          { label: 'Japonês (Japão)', value: 'ja-JP' },
+        ],
+        defaultValue: 'pt-BR',
+        validation: { isRequired: true },
+      }),
+      domain: text({ isIndexed: 'unique', validation: { isRequired: true } }),
       slug: text({ isIndexed: 'unique', validation: { isRequired: true } }),
       status: select({
         options: [

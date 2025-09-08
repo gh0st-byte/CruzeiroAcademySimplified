@@ -6,9 +6,7 @@ type School {
   name: String
   country: String
   country_name: String
-  timezone: String
   language: String
-  currency: String
   domain: String
   slug: String
   status: String
@@ -47,9 +45,7 @@ input SchoolWhereInput {
   name: StringFilter
   country: StringFilter
   country_name: StringFilter
-  timezone: StringFilter
   language: StringFilter
-  currency: StringFilter
   domain: StringFilter
   slug: StringFilter
   status: StringNullableFilter
@@ -182,9 +178,7 @@ input SchoolOrderByInput {
   name: OrderDirection
   country: OrderDirection
   country_name: OrderDirection
-  timezone: OrderDirection
   language: OrderDirection
-  currency: OrderDirection
   domain: OrderDirection
   slug: OrderDirection
   status: OrderDirection
@@ -201,9 +195,7 @@ input SchoolUpdateInput {
   name: String
   country: String
   country_name: String
-  timezone: String
   language: String
-  currency: String
   domain: String
   slug: String
   status: String
@@ -277,9 +269,7 @@ input SchoolCreateInput {
   name: String
   country: String
   country_name: String
-  timezone: String
   language: String
-  currency: String
   domain: String
   slug: String
   status: String
