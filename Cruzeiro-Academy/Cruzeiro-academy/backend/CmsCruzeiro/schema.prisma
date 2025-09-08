@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id          String     @id @default(uuid())
+  name        String
+  country     String
+  city        String?
+  slug        String     @unique
+  description String?
+  status      String     @default("active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  photos      Photo[]
+  formLinks   FormLink[]
+}
+
+model Photo {
+  id        String   @id @default(uuid())
+  schoolId  String?
+  school    School?  @relation(fields: [schoolId], references: [id])
+  fileUrl   String
+  altText   String?
+  tag       String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FormLink {
+  id          String   @id @default(uuid())
+  schoolId    String?
+  school      School?  @relation(fields: [schoolId], references: [id])
+  url         String
+  tag         String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
