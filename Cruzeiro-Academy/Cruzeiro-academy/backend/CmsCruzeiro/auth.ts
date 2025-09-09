@@ -1,38 +1,31 @@
-// =================================================================
-// CRUZEIRO ACADEMY CMS - AUTHENTICATION CONFIGURATION
-// Multi-tenant authentication using CmsUser entity
-// =================================================================
+import { createAuth } from '@keystone-6/auth';
+import { statelessSessions } from '@keystone-6/core/session';
 
-import { randomBytes } from 'node:crypto'
-import { createAuth } from '@keystone-6/auth'
-import { statelessSessions } from '@keystone-6/core/session'
+let sessionSecret = process.env.SESSION_SECRET;
 
-// Multi-tenant authentication configuration
-const { withAuth } = createAuth({
-  listKey: 'CmsUser',
+if (!sessionSecret && process.env.NODE_ENV !== 'production') {
+  sessionSecret = 'wcBDHH/kVCTnmVHBc0zGPTD5GFdvpGQBk2UcOgE6lbI=';
+}
+
+const { withAuth, session } = createAuth({
+  listKey: 'User', 
   identityField: 'email',
-  sessionData: 'id tenant { id name slug country } first_name last_name email role is_active created_at',
+  sessionData: 'name role isActive',
   secretField: 'password',
-
-  // Initial user creation for first setup
+  
   initFirstItem: {
-    fields: ['tenant', 'first_name', 'last_name', 'email', 'password', 'role'],
+    fields: ['name', 'email', 'password', 'role'],
     itemData: {
       role: 'super_admin',
-      is_active: true,
+      isActive: true,
     },
+    skipKeystoneWelcome: true,
   },
-})
+});
 
-// statelessSessions uses cookies for session tracking
-//   these cookies have an expiry, in seconds
-//   we use an expiry of 30 days for this starter
-const sessionMaxAge = 60 * 60 * 24 * 30
+const sessionConfig = statelessSessions({
+  maxAge: 60 * 60 * 24 * 30, // 30 days
+  secret: sessionSecret,
+});
 
-// you can find out more at https://keystonejs.com/docs/apis/session#session-api
-const session = statelessSessions({
-  maxAge: sessionMaxAge,
-  secret: process.env.SESSION_SECRET,
-})
-
-export { withAuth, session }
+export { withAuth, sessionConfig as session };

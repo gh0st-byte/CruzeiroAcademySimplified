@@ -1,8 +1,8 @@
 import { list } from '@keystone-6/core';
-import { text, password, relationship, timestamp, checkbox, select, json, integer, bigInt, float, virtual, calendarDay } from '@keystone-6/core/fields';
+import { text, password, relationship, timestamp, checkbox, select, json, integer, float } from '@keystone-6/core/fields';
 
 // =================================================================
-// ACCESS CONTROL FUNCTIONS - Multi-tenant Security
+// ACCESS CONTROL FUNCTIONS - Simplified
 // =================================================================
 function isAdmin({ session }) {
   return !!session?.data && ['admin', 'super_admin'].includes(session.data.role);
@@ -12,215 +12,190 @@ function isEditor({ session }) {
   return !!session?.data && ['admin', 'super_admin', 'editor'].includes(session.data.role);
 }
 
-function canViewUser({ session, item }) {
-  if (!session?.data) return false;
-  if (['admin', 'super_admin'].includes(session.data.role)) return true;
-  return session.data.id === item.id;
+function isAuthenticated({ session }) {
+  return !!session?.data;
 }
 
-function allowAll() {
-  return true;
-}
+// Constant for supported languages
+const SUPPORTED_LANGUAGES = [
+  { label: 'Português (Brasil)', value: 'pt-BR' },
+  { label: 'Inglês (EUA)', value: 'en-US' },
+  { label: 'Espanhol (Colombia e Peru)', value: 'es-ES' },
+  { label: 'Japonês (Japão)', value: 'ja-JP' },
+  { label: 'Tailandês (Tailândia)', value: 'th-TH' },
+];
 
 export const lists = {
-  // Schools (Tenants) - Multi-tenancy structure
-  School: list({
+  // =================================================================
+  // USERS & AUTHENTICATION
+  // =================================================================
+  User: list({
     fields: {
-      name: text({ validation: { isRequired: true } }),
-      country: text({ validation: { isRequired: true } }),
-      country_name: text({ validation: { isRequired: true } }),
-      language: select({
-        options: [
-          { label: 'Português (Brasil)', value: 'pt-BR' },
-          { label: 'Inglês (EUA)', value: 'en-US' },
-          { label: 'Espanhol (Colombia e Peru)', value: 'es-ES' },
-          { label: 'Japonês (Japão)', value: 'ja-JP' },
-        ],
-        defaultValue: 'pt-BR',
+      email: text({ 
+        isIndexed: 'unique', 
         validation: { isRequired: true },
+        ui: { itemView: { fieldMode: 'read' } }
       }),
-      domain: text({ isIndexed: 'unique', validation: { isRequired: true } }),
-      slug: text({ isIndexed: 'unique', validation: { isRequired: true } }),
-      status: select({
-        options: [
-          { label: 'Active', value: 'active' },
-          { label: 'Inactive', value: 'inactive' },
-          { label: 'Maintenance', value: 'maintenance' },
-        ],
-        defaultValue: 'active',
-      }),
-      settings: json({ defaultValue: {} }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      cms_users: relationship({ ref: 'CmsUser.tenant', many: true }),
-      contents: relationship({ ref: 'Content.tenant', many: true }),
-      categories: relationship({ ref: 'ContentCategory.tenant', many: true }),
-      media_files: relationship({ ref: 'MediaFile.tenant', many: true }),
-      navigation_menus: relationship({ ref: 'NavigationMenu.tenant', many: true }),
-      site_settings: relationship({ ref: 'SiteSetting.tenant', many: true }),
-      sections: relationship({ ref: 'Section.tenant', many: true }),
-    },
-    db: { map: 'schools' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isAdmin,
-        update: isAdmin,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // CMS Users with multi-tenancy
-  CmsUser: list({
-    fields: {
-      tenant: relationship({ ref: 'School.cms_users', validation: { isRequired: true } }),
-      email: text({ isIndexed: 'unique', validation: { isRequired: true } }),
-      password: password(),
-      first_name: text({ validation: { isRequired: true } }),
-      last_name: text({ validation: { isRequired: true } }),
+      password: password({ validation: { isRequired: true } }),
+      name: text({ validation: { isRequired: true } }),
       role: select({
         options: [
           { label: 'Super Admin', value: 'super_admin' },
           { label: 'Admin', value: 'admin' },
           { label: 'Editor', value: 'editor' },
-          { label: 'Viewer', value: 'viewer' },
         ],
         defaultValue: 'editor',
+        ui: { 
+          displayMode: 'segmented-control',
+          itemView: { fieldMode: ({ session }) => isAdmin({ session }) ? 'edit' : 'read' }
+        }
       }),
-      avatar_url: text(),
-      is_active: checkbox({ defaultValue: true }),
-      last_login: timestamp(),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      authored_contents: relationship({ ref: 'Content.author', many: true }),
-      uploaded_media: relationship({ ref: 'MediaFile.uploaded_by', many: true }),
-      updated_settings: relationship({ ref: 'SiteSetting.updated_by', many: true }),
+      isActive: checkbox({ 
+        defaultValue: true,
+        ui: { itemView: { fieldMode: ({ session }) => isAdmin({ session }) ? 'edit' : 'read' } }
+      }),
+      lastLogin: timestamp({ ui: { itemView: { fieldMode: 'read' } } }),
+      createdAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
     },
-    db: { map: 'cms_users' },
+    ui: {
+      listView: {
+        initialColumns: ['name', 'email', 'role', 'isActive', 'lastLogin'],
+      },
+    },
     access: {
       operation: {
-        query: ({ session }) => !!session?.data,
+        query: isAuthenticated,
         create: isAdmin,
-        update: canViewUser,
+        update: ({ session, item }) => {
+          if (isAdmin({ session })) return true;
+          return session?.data?.id === item.id;
+        },
         delete: isAdmin,
       },
     },
   }),
 
-  // Content Categories
-  ContentCategory: list({
-    fields: {
-      tenant: relationship({ ref: 'School.categories', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      slug: text({ validation: { isRequired: true } }),
-      description: text({ ui: { displayMode: 'textarea' } }),
-      parent: relationship({ ref: 'ContentCategory.children' }),
-      children: relationship({ ref: 'ContentCategory.parent', many: true }),
-      sort_order: integer({ defaultValue: 0 }),
-      is_active: checkbox({ defaultValue: true }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      contents: relationship({ ref: 'Content.category', many: true }),
-    },
-    db: { map: 'content_categories' },
-    access: {
-      operation: {
-        query: ({ session }) => !!session?.data,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // Contents
+  // =================================================================
+  // CONTENT MANAGEMENT
+  // =================================================================
   Content: list({
     fields: {
-      tenant: relationship({ ref: 'School.contents', validation: { isRequired: true } }),
-      category: relationship({ ref: 'ContentCategory.contents' }),
-      author: relationship({ ref: 'CmsUser.authored_contents', validation: { isRequired: true } }),
       title: text({ validation: { isRequired: true } }),
-      slug: text({ validation: { isRequired: true } }),
+      slug: text({ 
+        isIndexed: 'unique', 
+        validation: { isRequired: true },
+        hooks: {
+          resolveInput: ({ resolvedData }) => {
+            if (resolvedData.title && !resolvedData.slug) {
+              return resolvedData.title.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-\$/g, '');
+            }
+            return resolvedData.slug;
+          }
+        }
+      }),
       excerpt: text({ ui: { displayMode: 'textarea' } }),
-      body: text({ ui: { displayMode: 'textarea' }, validation: { isRequired: true } }),
-      featured_image_url: text(),
-      meta_title: text(),
-      meta_description: text(),
+      content: text({ 
+        ui: { displayMode: 'textarea', description: 'Main page content' },
+        validation: { isRequired: true }
+      }),
+      language: select({
+        options: SUPPORTED_LANGUAGES,
+        defaultValue: 'pt-BR',
+        validation: { isRequired: true },
+        ui: { displayMode: 'select' }
+      }),
       status: select({
         options: [
-          { label: 'Draft', value: 'draft' },
-          { label: 'Published', value: 'published' },
-          { label: 'Archived', value: 'archived' },
-          { label: 'Scheduled', value: 'scheduled' },
+          { label: '📝 Draft', value: 'draft' },
+          { label: '✅ Published', value: 'published' },
+          { label: '📅 Scheduled', value: 'scheduled' },
+          { label: '🗄️ Archived', value: 'archived' },
         ],
         defaultValue: 'draft',
+        ui: { displayMode: 'segmented-control' }
       }),
-      language: text({ validation: { isRequired: true }, defaultValue: 'pt-BR' }),
-      content_type: select({
-        options: [
-          { label: 'Article', value: 'article' },
-          { label: 'Page', value: 'page' },
-          { label: 'News', value: 'news' },
-          { label: 'Event', value: 'event' },
-        ],
-        defaultValue: 'article',
+      publishedAt: timestamp({
+        ui: {
+          description: 'Publication date (leave empty to publish immediately)'
+        }
       }),
-      is_featured: checkbox({ defaultValue: false }),
-      view_count: integer({ defaultValue: 0 }),
-      sort_order: integer({ defaultValue: 0 }),
-      published_at: timestamp(),
-      expires_at: timestamp(),
-      scheduled_at: timestamp(),
-      seo_settings: json({ defaultValue: {} }),
-      custom_fields: json({ defaultValue: {} }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      menu_items: relationship({ ref: 'NavigationMenuItem.content', many: true }),
+      seoTitle: text({ ui: { description: 'Title for SEO (meta title)' } }),
+      seoDescription: text({ 
+        ui: { 
+          displayMode: 'textarea',
+          description: 'Description for SEO (meta description) - max 160 characters'
+        }
+      }),
+      featuredImage: text({ ui: { description: 'Featured image URL' } }),
+      author: relationship({ ref: 'User' }),
+      createdAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
+      updatedAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
     },
-    db: { map: 'contents' },
+    ui: {
+      listView: {
+        initialColumns: ['title', 'language', 'status', 'publishedAt', 'author'],
+      },
+    },
     access: {
       operation: {
-        query: ({ session }) => !!session?.data,
+        query: () => true, // Public can view published content
         create: isEditor,
         update: isEditor,
         delete: isAdmin,
       },
     },
+    hooks: {
+      resolveInput: ({ resolvedData }) => {
+        resolvedData.updatedAt = new Date().toISOString();
+        return resolvedData;
+      }
+    }
   }),
 
-  // Media Files
-  MediaFile: list({
+  // =================================================================
+  // LANDING PAGE SYSTEM
+  // =================================================================
+  Section: list({
     fields: {
-      tenant: relationship({ ref: 'School.media_files', validation: { isRequired: true } }),
-      uploaded_by: relationship({ ref: 'CmsUser.uploaded_media', validation: { isRequired: true } }),
-      filename: text({ validation: { isRequired: true } }),
-      original_filename: text({ validation: { isRequired: true } }),
-      file_path: text({ validation: { isRequired: true } }),
-      file_url: text({ validation: { isRequired: true } }),
-      mime_type: text({ validation: { isRequired: true } }),
-      file_size: bigInt({ validation: { isRequired: true } }),
-      width: integer(),
-      height: integer(),
-      alt_text: text(),
-      caption: text({ ui: { displayMode: 'textarea' } }),
-      is_active: checkbox({ defaultValue: true }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships  
-      carousel_images: relationship({ ref: 'CarouselImage.media', many: true }),
-      image_banners: relationship({ ref: 'ImageBanner.media', many: true }),
+      name: text({ validation: { isRequired: true } }),
+      identifier: text({ 
+        isIndexed: 'unique', 
+        validation: { isRequired: true },
+        ui: { description: 'Unique identifier (e.g: hero, about, contact)' }
+      }),
+      language: select({
+        options: SUPPORTED_LANGUAGES,
+        defaultValue: 'pt-BR',
+        validation: { isRequired: true },
+        ui: { displayMode: 'segmented-control' }
+      }),
+      isActive: checkbox({ defaultValue: true }),
+      sortOrder: integer({ 
+        defaultValue: 0,
+        ui: { description: 'Display order on the page' }
+      }),
+      blocks: relationship({ ref: 'Block.section', many: true }),
+      createdAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
     },
-    db: { map: 'media_files' },
+    ui: {
+      listView: {
+        initialColumns: ['name', 'identifier', 'language', 'sortOrder', 'isActive'],
+      },
+    },
     access: {
       operation: {
         query: () => true,
@@ -231,28 +206,40 @@ export const lists = {
     },
   }),
 
-  // Navigation Menus
-  NavigationMenu: list({
+  Block: list({
     fields: {
-      tenant: relationship({ ref: 'School.navigation_menus', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      slug: text({ validation: { isRequired: true } }),
-      location: select({
+      title: text({ validation: { isRequired: true } }),
+      type: select({
         options: [
-          { label: 'Header', value: 'header' },
-          { label: 'Footer', value: 'footer' },
-          { label: 'Sidebar', value: 'sidebar' },
+          { label: '🎠 Carousel', value: 'carousel' },
+          { label: '📝 Rich Text', value: 'richText' },
+          { label: '🖼️ Image Banner', value: 'imageBanner' },
+          { label: '🎥 Video', value: 'video' },
+          { label: '📋 Google Form', value: 'googleForm' },
+          { label: '🧩 Custom Block', value: 'custom' },
         ],
         validation: { isRequired: true },
+        ui: { displayMode: 'segmented-control' }
       }),
-      is_active: checkbox({ defaultValue: true }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      menu_items: relationship({ ref: 'NavigationMenuItem.menu', many: true }),
+      section: relationship({ ref: 'Section.blocks', validation: { isRequired: true } }),
+      sortOrder: integer({ defaultValue: 0 }),
+      isVisible: checkbox({ defaultValue: true }),
+      settings: json({ 
+        defaultValue: {},
+        ui: { 
+          description: 'Block-specific settings in JSON format'
+        }
+      }),
+      createdAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
     },
-    db: { map: 'navigation_menus' },
+    ui: {
+      listView: {
+        initialColumns: ['title', 'type', 'section', 'sortOrder', 'isVisible'],
+      },
+    },
     access: {
       operation: {
         query: () => true,
@@ -263,29 +250,68 @@ export const lists = {
     },
   }),
 
-  // Navigation Menu Items
-  NavigationMenuItem: list({
+  // =================================================================
+  // GOOGLE FORMS INTEGRATION
+  // =================================================================
+  GoogleForm: list({
     fields: {
-      menu: relationship({ ref: 'NavigationMenu.menu_items', validation: { isRequired: true } }),
-      parent: relationship({ ref: 'NavigationMenuItem.children' }),
-      children: relationship({ ref: 'NavigationMenuItem.parent', many: true }),
-      title: text({ validation: { isRequired: true } }),
-      url: text(),
-      content: relationship({ ref: 'Content.menu_items' }),
-      target: select({
+      name: text({ validation: { isRequired: true } }),
+      language: select({
+        options: SUPPORTED_LANGUAGES,
+        defaultValue: 'pt-BR',
+        validation: { isRequired: true },
+        ui: { displayMode: 'segmented-control' }
+      }),
+      googleFormUrl: text({ 
+        validation: { isRequired: true },
+        ui: { description: 'Complete Google Form URL' }
+      }),
+      embedUrl: text({ 
+        ui: { description: 'Embed URL (automatically generated)' },
+        hooks: {
+          resolveInput: ({ resolvedData }) => {
+            if (resolvedData.googleFormUrl) {
+              // Convert normal URL to embed URL
+              const url = resolvedData.googleFormUrl;
+              if (url.includes('/viewform')) {
+                return url.replace('/viewform', '/viewform?embedded=true');
+              }
+            }
+            return resolvedData.embedUrl;
+          }
+        }
+      }),
+      title: text({ ui: { description: 'Form title for display' } }),
+      description: text({ 
+        ui: { 
+          displayMode: 'textarea',
+          description: 'Form description'
+        }
+      }),
+      buttonText: text({ 
+        defaultValue: 'Fill Form',
+        ui: { description: 'Button/link text' }
+      }),
+      displayType: select({
         options: [
-          { label: 'Same Window', value: '_self' },
-          { label: 'New Window', value: '_blank' },
+          { label: '🔗 Direct Link', value: 'link' },
+          { label: '📱 Embed/iframe', value: 'embed' },
+          { label: '🪟 Modal/Popup', value: 'modal' },
         ],
-        defaultValue: '_self',
+        defaultValue: 'link',
+        ui: { displayMode: 'segmented-control' }
       }),
-      css_class: text(),
-      sort_order: integer({ defaultValue: 0 }),
-      is_active: checkbox({ defaultValue: true }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
+      isActive: checkbox({ defaultValue: true }),
+      createdAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
     },
-    db: { map: 'navigation_menu_items' },
+    ui: {
+      listView: {
+        initialColumns: ['name', 'language', 'displayType', 'isActive'],
+      },
+    },
     access: {
       operation: {
         query: () => true,
@@ -296,102 +322,94 @@ export const lists = {
     },
   }),
 
-  // Site Settings
-  SiteSetting: list({
+  // =================================================================
+  // MEDIA & ASSETS
+  // =================================================================
+  media: list({
     fields: {
-      tenant: relationship({ ref: 'School.site_settings', validation: { isRequired: true } }),
-      setting_key: text({ validation: { isRequired: true } }),
-      setting_value: text({ ui: { displayMode: 'textarea' } }),
-      setting_type: select({
+      name: text({ validation: { isRequired: true } }),
+      url: text({ 
+        validation: { isRequired: true },
+        ui: { description: 'Image/media URL' }
+      }),
+      alt: text({ ui: { description: 'Alternative text for accessibility' } }),
+      caption: text({ ui: { displayMode: 'textarea' } }),
+      type: select({
+        options: [
+          { label: '🖼️ Image', value: 'image' },
+          { label: '🎥 Video', value: 'video' },
+          { label: '📄 Document', value: 'document' },
+        ],
+        defaultValue: 'image',
+      }),
+      isActive: checkbox({ defaultValue: true }),
+      createdAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
+    },
+    ui: {
+      listView: {
+        initialColumns: ['name', 'type', 'isActive'],
+      },
+    },
+    access: {
+      operation: {
+        query: () => true,
+        create: isEditor,
+        update: isEditor,
+        delete: isAdmin,
+      },
+    },
+  }),
+
+  // =================================================================
+  // SITE SETTINGS
+  // =================================================================
+  Setting: list({
+    fields: {
+      key: text({ 
+        isIndexed: 'unique', 
+        validation: { isRequired: true },
+        ui: { description: 'Unique setting key' }
+      }),
+      value: text({ 
+        ui: { displayMode: 'textarea' },
+        validation: { isRequired: true }
+      }),
+      language: select({
+        options: [
+          { label: '🌐 Global (all languages)', value: 'global' },
+          ...SUPPORTED_LANGUAGES
+        ],
+        defaultValue: 'global',
+        ui: { displayMode: 'segmented-control' }
+      }),
+      type: select({
         options: [
           { label: 'Text', value: 'text' },
+          { label: 'Number', value: 'number' },
           { label: 'Boolean', value: 'boolean' },
           { label: 'JSON', value: 'json' },
-          { label: 'Number', value: 'number' },
+          { label: 'URL', value: 'url' },
         ],
         defaultValue: 'text',
       }),
       description: text({ ui: { displayMode: 'textarea' } }),
-      is_public: checkbox({ defaultValue: false }),
-      updated_by: relationship({ ref: 'CmsUser.updated_settings' }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'site_settings' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isAdmin,
-        update: isAdmin,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // =================================================================
-  // SISTEMA DE PÁGINAS POR BLOCOS PARA LANDING PAGES
-  // =================================================================
-
-  // Sections - Áreas da página (home, about, contact, etc.)
-  Section: list({
-    fields: {
-      tenant: relationship({ ref: 'School.sections', validation: { isRequired: true } }),
-      key: text({ isIndexed: 'unique', validation: { isRequired: true } }),
-      title: text({ validation: { isRequired: true } }),
-      description: text({ ui: { displayMode: 'textarea' } }),
-      is_active: checkbox({ defaultValue: true }),
-      sort_order: integer({ defaultValue: 0 }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      blocks: relationship({ ref: 'Block.section', many: true }),
-    },
-    db: { map: 'sections' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
+      isPublic: checkbox({ 
+        defaultValue: false,
+        ui: { description: 'If checked, will be accessible via public API' }
+      }),
+      updatedAt: timestamp({ 
+        defaultValue: { kind: 'now' },
+        ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+      }),
     },
     ui: {
       listView: {
-        initialColumns: ['title', 'key', 'sort_order', 'is_active'],
+        initialColumns: ['key', 'language', 'type', 'isPublic'],
       },
     },
-  }),
-
-  // Blocks - Elementos dentro das seções
-  Block: list({
-    fields: {
-      section: relationship({ ref: 'Section.blocks', validation: { isRequired: true } }),
-      type: select({
-        options: [
-          { label: 'Carousel', value: 'carousel' },
-          { label: 'Rich Text', value: 'richText' },
-          { label: 'Image Banner', value: 'imageBanner' },
-          { label: 'Video Embed', value: 'videoEmbed' },
-          { label: 'Custom Block', value: 'customBlock' },
-        ],
-        validation: { isRequired: true },
-      }),
-      title: text({ validation: { isRequired: true } }),
-      order: integer({ defaultValue: 0 }),
-      visible: checkbox({ defaultValue: true }),
-      data: json({ defaultValue: {} }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships to specific elements
-      carousel: relationship({ ref: 'Carousel.block' }),
-      rich_text: relationship({ ref: 'RichText.block' }),
-      image_banner: relationship({ ref: 'ImageBanner.block' }),
-      video_embed: relationship({ ref: 'VideoEmbed.block' }),
-      custom_block: relationship({ ref: 'CustomBlock.block' }),
-    },
-    db: { map: 'blocks' },
     access: {
       operation: {
         query: () => true,
@@ -400,297 +418,282 @@ export const lists = {
         delete: isAdmin,
       },
     },
-    ui: {
-      listView: {
-        initialColumns: ['title', 'type', 'order', 'visible'],
-      },
-    },
-  }),
-
-  // Carousel Element
-  Carousel: list({
-    fields: {
-      block: relationship({ ref: 'Block.carousel', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      autoplay: checkbox({ defaultValue: true }),
-      interval_ms: integer({ defaultValue: 5000 }),
-      show_arrows: checkbox({ defaultValue: true }),
-      show_dots: checkbox({ defaultValue: true }),
-      aspect_ratio: text({ defaultValue: '16:9' }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-      
-      // Relationships
-      images: relationship({ ref: 'CarouselImage.carousel', many: true }),
-    },
-    db: { map: 'carousels' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // Carousel Images
-  CarouselImage: list({
-    fields: {
-      carousel: relationship({ ref: 'Carousel.images', validation: { isRequired: true } }),
-      media: relationship({ ref: 'MediaFile.carousel_images' }),
-      url: text({ validation: { isRequired: true } }),
-      alt: text(),
-      caption: text({ ui: { displayMode: 'textarea' } }),
-      link_url: text(),
-      order: integer({ defaultValue: 0 }),
-      is_active: checkbox({ defaultValue: true }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'carousel_images' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
-    ui: {
-      listView: {
-        initialColumns: ['carousel', 'alt', 'order', 'is_active'],
-      },
-    },
-  }),
-
-  // Rich Text Element
-  RichText: list({
-    fields: {
-      block: relationship({ ref: 'Block.rich_text', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      content: json({ validation: { isRequired: true } }),
-      text_align: select({
-        options: [
-          { label: 'Left', value: 'left' },
-          { label: 'Center', value: 'center' },
-          { label: 'Right', value: 'right' },
-          { label: 'Justify', value: 'justify' },
-        ],
-        defaultValue: 'left',
-      }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'rich_texts' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // Image Banner Element
-  ImageBanner: list({
-    fields: {
-      block: relationship({ ref: 'Block.image_banner', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      media: relationship({ ref: 'MediaFile.image_banners' }),
-      url: text({ validation: { isRequired: true } }),
-      alt: text(),
-      link_url: text(),
-      overlay_text: text({ ui: { displayMode: 'textarea' } }),
-      overlay_position: select({
-        options: [
-          { label: 'Top Left', value: 'top-left' },
-          { label: 'Top Center', value: 'top-center' },
-          { label: 'Top Right', value: 'top-right' },
-          { label: 'Center Left', value: 'center-left' },
-          { label: 'Center', value: 'center' },
-          { label: 'Center Right', value: 'center-right' },
-          { label: 'Bottom Left', value: 'bottom-left' },
-          { label: 'Bottom Center', value: 'bottom-center' },
-          { label: 'Bottom Right', value: 'bottom-right' },
-        ],
-        defaultValue: 'center',
-      }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'image_banners' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // Video Embed Element
-  VideoEmbed: list({
-    fields: {
-      block: relationship({ ref: 'Block.video_embed', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      provider: select({
-        options: [
-          { label: 'YouTube', value: 'youtube' },
-          { label: 'Vimeo', value: 'vimeo' },
-          { label: 'Twitch', value: 'twitch' },
-          { label: 'Direct URL', value: 'direct' },
-        ],
-        validation: { isRequired: true },
-      }),
-      video_id: text({ validation: { isRequired: true } }),
-      video_url: text(),
-      title: text(),
-      description: text({ ui: { displayMode: 'textarea' } }),
-      thumbnail_url: text(),
-      autoplay: checkbox({ defaultValue: false }),
-      controls: checkbox({ defaultValue: true }),
-      mute: checkbox({ defaultValue: false }),
-      loop: checkbox({ defaultValue: false }),
-      aspect_ratio: text({ defaultValue: '16:9' }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'video_embeds' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
-  }),
-
-  // Custom Block Element
-  CustomBlock: list({
-    fields: {
-      block: relationship({ ref: 'Block.custom_block', validation: { isRequired: true } }),
-      name: text({ validation: { isRequired: true } }),
-      component_name: text({ validation: { isRequired: true } }),
-      data: json({ defaultValue: {} }),
-      css_classes: text(),
-      inline_styles: json({ defaultValue: {} }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'custom_blocks' },
-    access: {
-      operation: {
-        query: () => true,
-        create: isEditor,
-        update: isEditor,
-        delete: isAdmin,
-      },
-    },
+    hooks: {
+      resolveInput: ({ resolvedData }) => {
+        resolvedData.updatedAt = new Date().toISOString();
+        return resolvedData;
+      }
+    }
   }),
 
   // =================================================================
-  // AUDIT & MONITORING TABLES
+  // ANALYTICS & MONITORING (Simplified)
   // =================================================================
-
-  // Audit Logs for security tracking
-  AuditLog: list({
+  PageView: list({
     fields: {
-      tenant: relationship({ ref: 'School' }),
-      user: relationship({ ref: 'CmsUser' }),
-      table_name: text({ validation: { isRequired: true } }),
-      record_id: text(),
-      operation: select({
-        options: [
-          { label: 'Insert', value: 'INSERT' },
-          { label: 'Update', value: 'UPDATE' },
-          { label: 'Delete', value: 'DELETE' },
-          { label: 'Select', value: 'SELECT' },
-        ],
-        validation: { isRequired: true },
+      page: text({ validation: { isRequired: true } }),
+      language: text({ defaultValue: 'pt-BR' }),
+      userAgent: text(),
+      ipAddress: text(),
+      referrer: text(),
+      timestamp: timestamp({ 
+        defaultValue: { kind: 'now' },
+        validation: { isRequired: true }
       }),
-      old_values: json(),
-      new_values: json(),
-      ip_address: text(),
-      user_agent: text({ ui: { displayMode: 'textarea' } }),
-      session_id: text(),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
     },
-    db: { map: 'audit_logs' },
+    ui: {
+      listView: {
+        initialColumns: ['page', 'language', 'timestamp'],
+      },
+      hideCreate: true, // Created automatically via API
+    },
     access: {
       operation: {
         query: isAdmin,
-        create: () => false, // Criados automaticamente por triggers
-        update: () => false, // Imutáveis
-        delete: isAdmin,     // Apenas admin pode limpar logs
+        create: () => true, // Public API can create
+        update: () => false,
+        delete: isAdmin,
       },
-    },
-    ui: {
-      listView: {
-        initialColumns: ['table_name', 'operation', 'user', 'created_at'],
-      },
-      hideCreate: true,
-      hideDelete: false,
     },
   }),
 
-  // User Sessions for authentication tracking
-  UserSession: list({
-    fields: {
-      user: relationship({ ref: 'CmsUser', validation: { isRequired: true } }),
-      session_token: text({ isIndexed: 'unique', validation: { isRequired: true } }),
-      ip_address: text(),
-      user_agent: text({ ui: { displayMode: 'textarea' } }),
-      is_active: checkbox({ defaultValue: true }),
-      expires_at: timestamp({ validation: { isRequired: true } }),
-      created_at: timestamp({ defaultValue: { kind: 'now' } }),
-      updated_at: timestamp({ defaultValue: { kind: 'now' } }),
-    },
-    db: { map: 'user_sessions' },
-    access: {
-      operation: {
-        query: isAdmin,
-        create: () => false, // Criadas pela autenticação
-        update: () => false, // Gerenciadas pelo sistema
-        delete: isAdmin,     // Admin pode remover sessões
-      },
-    },
-    ui: {
-      listView: {
-        initialColumns: ['user', 'is_active', 'expires_at', 'created_at'],
-      },
-      hideCreate: true,
-    },
-  }),
 
-  // Connection Statistics for monitoring
-  ConnectionStat: list({
-    fields: {
-      timestamp: timestamp({ defaultValue: { kind: 'now' }, validation: { isRequired: true } }),
-      active_connections: integer({ validation: { isRequired: true } }),
-      total_connections: integer({ validation: { isRequired: true } }),
-      slow_queries: integer({ defaultValue: 0 }),
-      cpu_usage: float(),
-      memory_usage: float(),
-      disk_usage: float(),
+
+  // =================================================================
+// NAVIGATION & MENUS 
+// =================================================================
+Menu: list({
+  fields: {
+    name: text({ 
+      validation: { isRequired: true },
+      ui: { description: 'Display name for this menu' }
+    }),
+    identifier: text({ 
+      isIndexed: 'unique', 
+      validation: { isRequired: true },
+      ui: { description: 'Unique identifier (e.g., main-menu, footer-menu, mobile-menu)' },
+      hooks: {
+        resolveInput: ({ resolvedData }) => {
+          if (resolvedData.name && !resolvedData.identifier) {
+            return resolvedData.name.toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-\$/g, '');
+          }
+          return resolvedData.identifier;
+        }
+      }
+    }),
+    language: select({
+      options: SUPPORTED_LANGUAGES,
+      defaultValue: 'pt-BR',
+      validation: { isRequired: true },
+      ui: { 
+        displayMode: 'select',
+        description: 'Language for this menu'
+      }
+    }),
+    location: select({
+      options: [
+        { label: ' Header Menu', value: 'header' },
+        { label: ' Mobile Menu', value: 'mobile' },
+        { label: ' Footer Menu', value: 'footer' },
+        { label: ' User Menu', value: 'user' },
+        { label: ' Sidebar Menu', value: 'sidebar' },
+      ],
+      defaultValue: 'header',
+      ui: { displayMode: 'select' }
+    }),
+    description: text({ 
+      ui: { 
+        displayMode: 'textarea',
+        description: 'Optional description for admin reference'
+      }
+    }),
+    isActive: checkbox({ 
+      defaultValue: true,
+      ui: { description: 'Enable/disable this entire menu' }
+    }),
+    cssClass: text({ 
+      ui: { description: 'Custom CSS class for styling' }
+    }),
+    maxDepth: integer({ 
+      defaultValue: 3,
+      ui: { description: 'Maximum nesting level (1 = no submenus)' }
+    }),
+    items: relationship({ ref: 'MenuItem.menu', many: true }),
+    createdAt: timestamp({ 
+      defaultValue: { kind: 'now' },
+      ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+    }),
+    updatedAt: timestamp({ 
+      defaultValue: { kind: 'now' },
+      ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+    }),
+  },
+  ui: {
+    listView: {
+      initialColumns: ['name', 'identifier', 'language', 'location', 'isActive'],
     },
-    db: { map: 'connection_stats' },
-    access: {
-      operation: {
-        query: isAdmin,
-        create: () => false, // Criadas por sistema de monitoramento
-        update: () => false, // Imutáveis
-        delete: isAdmin,     // Admin pode limpar estatísticas antigas
-      },
+    labelField: 'name',
+  },
+  hooks: {
+    resolveInput: ({ resolvedData }) => {
+      resolvedData.updatedAt = new Date().toISOString();
+      return resolvedData;
+    }
+  },
+  access: {
+    operation: {
+      query: () => true,
+      create: isEditor,
+      update: isEditor,
+      delete: isAdmin,
     },
-    ui: {
-      listView: {
-        initialColumns: ['timestamp', 'active_connections', 'total_connections', 'cpu_usage'],
-      },
-      hideCreate: true,
+  },
+}),
+
+MenuItem: list({
+  fields: {
+    label: text({ 
+      validation: { isRequired: true },
+      ui: { description: 'Text displayed in the menu' }
+    }),
+    url: text({ 
+      validation: { isRequired: true },
+      ui: { description: 'URL or path (e.g., /about, https://example.com, #section)' }
+    }),
+    type: select({
+      options: [
+        { label: ' Internal Page', value: 'internal' },
+        { label: ' External Link', value: 'external' },
+        { label: ' Email', value: 'email' },
+        { label: ' Phone', value: 'phone' },
+        { label: ' Anchor/Section', value: 'anchor' },
+        { label: ' Action', value: 'action' },
+      ],
+      defaultValue: 'internal',
+      ui: { 
+        displayMode: 'select',
+        description: 'Type of link'
+      }
+    }),
+    target: select({
+      options: [
+        { label: ' Same Window', value: '_self' },
+        { label: ' New Tab', value: '_blank' },
+        { label: ' Modal/Popup', value: '_modal' },
+      ],
+      defaultValue: '_self',
+      ui: { displayMode: 'select' }
+    }),
+    icon: text({ 
+      ui: { 
+        description: 'Icon class or emoji (e.g., "fas fa-home", "🏠")'
+      }
+    }),
+    description: text({ 
+      ui: { 
+        displayMode: 'textarea',
+        description: 'Tooltip or subtitle text (optional)'
+      }
+    }),
+    order: integer({ 
+      defaultValue: 0,
+      ui: { description: 'Sort order (lower numbers appear first)' }
+    }),
+    isActive: checkbox({ 
+      defaultValue: true,
+      ui: { description: 'Show/hide this menu item' }
+    }),
+    isHighlighted: checkbox({ 
+      defaultValue: false,
+      ui: { description: 'Special styling (e.g., CTA button)' }
+    }),
+    requiresAuth: checkbox({ 
+      defaultValue: false,
+      ui: { description: 'Only show to logged-in users' }
+    }),
+    cssClass: text({ 
+      ui: { description: 'Custom CSS class for this item' }
+    }),
+    
+    // Relationships
+    menu: relationship({ 
+      ref: 'Menu.items', 
+      validation: { isRequired: true },
+      ui: { description: 'Which menu this item belongs to' }
+    }),
+    content: relationship({ 
+      ref: 'Content',
+      ui: { description: 'Link to internal content (optional)' }
+    }),
+    parentItem: relationship({ 
+      ref: 'MenuItem.children',
+      ui: { description: 'Parent menu item (for submenus)' }
+    }),
+    children: relationship({ 
+      ref: 'MenuItem.parentItem', 
+      many: true,
+      ui: { description: 'Child menu items (submenus)' }
+    }),
+    
+    // Metadata
+    clickCount: integer({ 
+      defaultValue: 0,
+      ui: { 
+        itemView: { fieldMode: 'read' },
+        description: 'Number of times this link was clicked'
+      }
+    }),
+    createdAt: timestamp({ 
+      defaultValue: { kind: 'now' },
+      ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+    }),
+    updatedAt: timestamp({ 
+      defaultValue: { kind: 'now' },
+      ui: { createView: { fieldMode: 'hidden' }, itemView: { fieldMode: 'read' } }
+    }),
+  },
+  ui: {
+    listView: {
+      initialColumns: ['label', 'url', 'type', 'menu', 'order', 'isActive'],
     },
-  }),
+    labelField: 'label',
+  },
+  hooks: {
+    resolveInput: ({ resolvedData }) => {
+      // Auto-generate URL based on content relationship
+      if (resolvedData.content && !resolvedData.url) {
+        // This would need to be implemented based on your content URL structure
+        resolvedData.url = `/content/\${resolvedData.content}`;
+      }
+      
+      // Auto-set type based on URL
+      if (resolvedData.url && !resolvedData.type) {
+        if (resolvedData.url.startsWith('http')) {
+          resolvedData.type = 'external';
+        } else if (resolvedData.url.startsWith('mailto:')) {
+          resolvedData.type = 'email';
+        } else if (resolvedData.url.startsWith('tel:')) {
+          resolvedData.type = 'phone';
+        } else if (resolvedData.url.startsWith('#')) {
+          resolvedData.type = 'anchor';
+        } else {
+          resolvedData.type = 'internal';
+        }
+      }
+      
+      resolvedData.updatedAt = new Date().toISOString();
+      return resolvedData;
+    }
+  },
+  access: {
+    operation: {
+      query: () => true,
+      create: isEditor,
+      update: isEditor,
+      delete: isAdmin,
+    },
+  },
+}),
 };

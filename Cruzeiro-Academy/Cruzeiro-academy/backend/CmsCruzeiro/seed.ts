@@ -12,10 +12,8 @@ async function main() {
       name: 'Cruzeiro Academy Brasil',
       country: 'BRA',
       country_name: 'Brasil',
-      timezone: 'America/Sao_Paulo',
+      address: 'Avenida Afonso Pena, 4000 - Belo Horizonte, MG, Brasil',
       language: 'pt-BR',
-      currency: 'BRL',
-      domain: 'br.cruzeiroacademy.com',
       slug: 'brazil',
       status: 'active',
     }

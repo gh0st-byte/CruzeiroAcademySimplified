@@ -1,0 +1,17 @@
+{
+  "navigation": {
+    "home": "Início",
+    "about": "Sobre",
+    "contact": "Contato"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro ao carregar",
+    "fillForm": "Preencher Formulário",
+    "close": "Fechar"
+  },
+  "seo": {
+    "defaultTitle": "Cruzeiro Academy - Excelência Educacional",
+    "defaultDescription": "Descubra a excelência educacional na Cruzeiro Academy"
+  }
+}
