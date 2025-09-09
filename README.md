@@ -18,11 +18,10 @@ Um sistema de gerenciamento de conteúdo (CMS) headless multi-tenant desenvolvid
 
 ##  Visão Geral
 
-O Cruzeiro Academy CMS é uma plataforma headless desenvolvida para gerenciar conteúdo educacional em múltiplos países e idiomas. O sistema oferece uma arquitetura multi-tenant que permite a gestão de diferentes academias do Cruzeiro ao redor do mundo através de uma única instância.
+O Cruzeiro Academy CMS é uma plataforma headless desenvolvida para gerenciar conteúdo educacional em múltiplos países e idiomas. O sistema oferece uma arquitetura que permite a gestão de diferentes academias do Cruzeiro ao redor do mundo através de uma única instância.
 
 ### Características Principais
 
-- **Multi-tenancy**: Suporte a múltiplas escolas/academias
 - **CMS Headless**: API GraphQL para integração com qualquer frontend
 - **Gestão de Conteúdo**: Artigos, páginas, notícias e eventos
 - **Sistema de Permissões**: Controle granular de acesso por roles
@@ -41,14 +40,6 @@ O Cruzeiro Academy CMS é uma plataforma headless desenvolvida para gerenciar co
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### Multi-tenancy
-
-O sistema implementa multi-tenancy através da entidade `School`, onde cada escola representa um tenant independente com:
-
-- Configurações específicas (timezone, idioma, moeda)
-- Usuários dedicados
-- Conteúdo isolado
-- Categorias próprias
 
 ##  Tecnologias
 
@@ -89,15 +80,12 @@ CruzeiroAcademy/
         │       ├── Dockerfile      # Container do backend
         │       └── schema.prisma   # Schema Prisma (auto-gerado)
         ├── frontend/               # Frontend React
-        │   ├── src/
-        │   │   ├── App.jsx         # Componente principal
-        │   │   ├── main.jsx        # Ponto de entrada
-        │   │   └── index.css       # Estilos globais
+        │   ├── src/...
         │   ├── package.json        # Dependências do frontend
         │   ├── vite.config.js      # Configuração Vite
         │   └── Dockerfile          # Container do frontend
         └── db/
-            └── data/               # Dados persistentes PostgreSQL
+            └── data/...            # Dados persistentes PostgreSQL
 ```
 
 ##  Configuração do Ambiente
@@ -191,11 +179,7 @@ npm run dev
 - **Admin CMS**: [http://localhost:3000](http://localhost:3000)
 - **GraphQL Playground**: [http://localhost:3000/api/graphql](http://localhost:3000/api/graphql)
 
-### 4. Login Inicial
 
-**Usuário Administrador Padrão:**
-- Email: `marco.repoles@cruzeiro.com`
-- Senha: `cruzeiro@1921`
 
 ##  API GraphQL
 
@@ -205,20 +189,15 @@ O sistema oferece uma API GraphQL completa com as seguintes entidades:
 
 #### Entidades Principais
 
-1. **School** (Tenant)
+1. **School** 
    - Configurações de escola/academia
    - Informações de localização e idioma
    - Status e configurações personalizadas
 
-2. **CmsUser** 
+2. **User** 
    - Usuários do sistema CMS
-   - Roles: super_admin, admin, editor, viewer
+   - Roles: super_admin, admin, editor
    - Vinculação a tenant específico
-
-3. **ContentCategory**
-   - Categorias hierárquicas de conteúdo
-   - Suporte a sub-categorias
-   - Ordenação personalizada
 
 4. **Content**
    - Artigos, páginas, notícias e eventos
@@ -256,13 +235,11 @@ mutation CreateContent($data: ContentCreateInput!) {
 
 ### Sistema Multi-tenant
 - Gestão de múltiplas academias/escolas
-- Isolamento de dados por tenant
 - Configurações específicas por região
 
 ### Gestão de Conteúdo
 - Editor de conteúdo rico
 - Categorização hierárquica
-- Agendamento de publicações
 - Controle de versão
 - Metadados SEO
 
@@ -283,16 +260,14 @@ mutation CreateContent($data: ContentCreateInput!) {
 ### Roles Disponíveis
 
 1. **Super Admin**: Acesso total ao sistema
-2. **Admin**: Gestão completa do tenant
+2. **Admin**: Gestão de editores
 3. **Editor**: Criação e edição de conteúdo
-4. **Viewer**: Apenas visualização
 
 ### Controle de Acesso
 
 - **Schools**: Apenas admins podem criar/editar
 - **Users**: Usuários podem editar próprio perfil
 - **Content**: Editores podem criar/editar
-- **Categories**: Editores podem gerenciar
 
 ##  Docker
 
