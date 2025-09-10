@@ -1,21 +1,133 @@
 import { gql } from '@apollo/client';
 
-// HOMEPAGE usando SECTIONS (como você já tinha - estava certo!)
+// =================================================================
+// HOMEPAGE - Agora usando Pages + Sections
+// =================================================================
 export const GET_HOMEPAGE = gql`
   query GetHomepage(\$language: String!) {
+    # Método 1: Buscar página tipo "homepage" 
+    pages(
+      where: { 
+        type: { equals: "homepage" }
+        language: { equals: \$language }
+        status: { equals: "published" }
+      }
+      take: 1
+    ) {
+      id
+      title
+      type
+      language
+      seoTitle
+      seoDescription
+      seoKeywords
+      socialTitle
+      socialDescription
+      socialImage {
+        id
+        url
+        alt
+      }
+      sections(
+        where: { isActive: { equals: true } }
+        orderBy: { sortOrder: asc }
+      ) {
+        id
+        name
+        identifier
+        title
+        subtitle
+        backgroundColor
+        backgroundImage {
+          id
+          url
+          alt
+        }
+        cssClass
+        padding
+        blocks(
+          where: { isVisible: { equals: true } }
+          orderBy: { sortOrder: asc }
+        ) {
+          id
+          title
+          type
+          content
+          subtitle
+          buttonText
+          buttonUrl
+          layout
+          backgroundColor
+          textColor
+          cssClass
+          image {
+            id
+            url
+            alt
+            width
+            height
+          }
+          video {
+            id
+            url
+            alt
+          }
+          gallery {
+            id
+            url
+            alt
+            width
+            height
+          }
+          googleForm {
+            id
+            name
+            title
+            description
+            buttonText
+            displayType
+            googleFormUrl
+            embedUrl
+            buttonColor
+            buttonSize
+          }
+          sortOrder
+          settings
+        }
+      }
+      featuredImage {
+        id
+        url
+        alt
+      }
+      author {
+        id
+        name
+      }
+    }
+    
+    # Método 2: Buscar seções diretamente (fallback)
     sections(
       where: { 
         language: { equals: \$language }
         isActive: { equals: true }
+        page: null  # Seções não vinculadas a página específica
       }
       orderBy: { sortOrder: asc }
     ) {
       id
       name
       identifier
-      language
-      isActive
-      sortOrder
+      title
+      subtitle
+      backgroundColor
+      backgroundImage {
+        id
+        url
+        alt
+      }
+      cssClass
+      padding
       blocks(
         where: { isVisible: { equals: true } }
         orderBy: { sortOrder: asc }
@@ -23,17 +135,150 @@ export const GET_HOMEPAGE = gql`
         id
         title
         type
+        content
+        subtitle
+        buttonText
+        buttonUrl
+        layout
+        backgroundColor
+        textColor
+        cssClass
+        image {
+          id
+          url
+          alt
+          width
+          height
+        }
+        video {
+          id
+          url
+          alt
+        }
+        gallery {
+          id
+          url
+          alt
+          width
+          height
+        }
+        googleForm {
+          id
+          name
+          title
+          description
+          buttonText
+          displayType
+          googleFormUrl
+          embedUrl
+          buttonColor
+          buttonSize
+        }
         sortOrder
-        isVisible
         settings
-        createdAt
       }
-      createdAt
     }
   }
 `;
 
-// MENU (já estava correto)
+// =================================================================
+// PÁGINA POR SLUG
+// =================================================================
+export const GET_PAGE_BY_SLUG = gql`
+  query GetPageBySlug(\$slug: String!, \$language: String!) {
+    pages(
+      where: { 
+        slug: { equals: \$slug }
+        language: { equals: \$language }
+        status: { equals: "published" }
+      }
+      take: 1
+    ) {
+      id
+      title
+      type
+      excerpt
+      language
+      status
+      publishedAt
+      seoTitle
+      seoDescription
+      seoKeywords
+      socialTitle
+      socialDescription
+      socialImage {
+        id
+        url
+        alt
+      }
+      sections(
+        where: { isActive: { equals: true } }
+        orderBy: { sortOrder: asc }
+      ) {
+        id
+        name
+        identifier
+        title
+        subtitle
+        backgroundColor
+        backgroundImage {
+          id
+          url
+          alt
+        }
+        blocks(
+          where: { isVisible: { equals: true } }
+          orderBy: { sortOrder: asc }
+        ) {
+          id
+          title
+          type
+          content
+          subtitle
+          buttonText
+          buttonUrl
+          layout
+          image {
+            id
+            url
+            alt
+          }
+          gallery {
+            id
+            url
+            alt
+          }
+          googleForm {
+            id
+            title
+            description
+            buttonText
+            googleFormUrl
+            embedUrl
+            displayType
+          }
+          settings
+        }
+      }
+      featuredImage {
+        id
+        url
+        alt
+      }
+      author {
+        id
+        name
+      }
+      viewCount
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+// =================================================================
+// MENU (já estava correto, pequenos ajustes)
+// =================================================================
 export const GET_MENU = gql`
   query GetMenu(\$language: String!, \$location: String!) {
     menus(
@@ -46,10 +291,9 @@ export const GET_MENU = gql`
       id
       name
       identifier
-      language
       location
       description
-      isActive
+      cssClass
       items(
         where: { isActive: { equals: true } }
         orderBy: { order: asc }
@@ -64,6 +308,13 @@ export const GET_MENU = gql`
         order
         isActive
         isHighlighted
+        requiresAuth
+        cssClass
+        page {
+          id
+          slug
+          title
+        }
         children(
           where: { isActive: { equals: true } }
           orderBy: { order: asc }
@@ -73,35 +324,49 @@ export const GET_MENU = gql`
           url
           type
           target
+          icon
           order
+          page {
+            id
+            slug
+            title
+          }
         }
       }
     }
   }
 `;
 
-// SITE SETTINGS (corrigido para usar 'settings')
+// =================================================================
+// CONFIGURAÇÕES DO SITE
+// =================================================================
 export const GET_SITE_SETTINGS = gql`
   query GetSiteSettings(\$language: String!) {
     settings(
       where: { 
-        language: { equals: \$language }
+        OR: [
+          { language: { equals: \$language } }
+          { language: { equals: "global" } }
+        ]
         isPublic: { equals: true }
       }
     ) {
       id
       key
+      name
       value
+      defaultValue
+      category
       language
       type
       description
-      isPublic
-      updatedAt
     }
   }
 `;
 
-// GOOGLE FORMS (já estava correto)
+// =================================================================
+// GOOGLE FORMS
+// =================================================================
 export const GET_GOOGLE_FORMS = gql`
   query GetGoogleForms(\$language: String!) {
     googleForms(
@@ -119,59 +384,111 @@ export const GET_GOOGLE_FORMS = gql`
       description
       buttonText
       displayType
+      buttonColor
+      buttonSize
+      clickCount
       isActive
       createdAt
     }
   }
 `;
 
-// CONTENT POR SLUG (para páginas individuais)
-export const GET_CONTENT_BY_SLUG = gql`
-  query GetContentBySlug(\$slug: String!, \$language: String!) {
-    contents(
-      where: { 
-        slug: { equals: \$slug }
-        language: { equals: \$language }
-        status: { equals: "published" }
-      }
-      take: 1
-    ) {
-      id
-      title
-      slug
-      excerpt
-      content
-      language
-      status
-      publishedAt
-      seoTitle
-      seoDescription
-      featuredImage
-      author {
-        id
-        name
-      }
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
+// =================================================================
+// MEDIA
+// =================================================================
 // MEDIA
 export const GET_MEDIA = gql`
-  query GetMedia {
-    media(
-      where: { isActive: { equals: true } }
+  query GetMedia(\$category: String, \$type: String) {
+    mediaFiles(
+      where: { 
+        isActive: { equals: true }
+        \${category ? 'category: { equals: \$category }' : ''}
+        \${type ? 'type: { equals: \$type }' : ''}
+      }
       orderBy: { createdAt: desc }
     ) {
       id
       name
-      url
       alt
       caption
+      url
+      filename
+      mimeType
+      width
+      height
       type
-      isActive
+      category
+      tags
+      isFeatured
+      usageCount
       createdAt
+    }
+  }
+`;
+
+// =================================================================
+// BUSCA GERAL
+// =================================================================
+export const SEARCH_CONTENT = gql`
+  query SearchContent(\$query: String!, \$language: String!) {
+    pages(
+      where: {
+        AND: [
+          { language: { equals: \$language } }
+          { status: { equals: "published" } }
+          {
+            OR: [
+              { title: { contains: \$query, mode: insensitive } }
+              { excerpt: { contains: \$query, mode: insensitive } }
+              { seoDescription: { contains: \$query, mode: insensitive } }
+            ]
+          }
+        ]
+      }
+      take: 10
+    ) {
+      id
+      title
+      slug
+      type
+      excerpt
+      seoDescription
+      featuredImage {
+        id
+        url
+        alt
+      }
+      publishedAt
+    }
+  }
+`;
+
+// =================================================================
+// ANALYTICS
+// =================================================================
+export const CREATE_PAGE_VIEW = gql`
+  mutation CreatePageView(\$data: PageViewCreateInput!) {
+    createPageView(data: \$data) {
+      id
+      timestamp
+    }
+  }
+`;
+
+export const GET_PAGE_ANALYTICS = gql`
+  query GetPageAnalytics(\$startDate: DateTime!, \$endDate: DateTime!) {
+    pageViews(
+      where: {
+        timestamp: {
+          gte: \$startDate
+          lte: \$endDate
+        }
+      }
+    ) {
+      id
+      page
+      language
+      timestamp
     }
   }
 `;

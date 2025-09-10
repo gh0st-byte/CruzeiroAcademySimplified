@@ -152,78 +152,130 @@ input UserCreateInput {
   createdAt: DateTime
 }
 
-type Content {
+type Page {
   id: ID!
   title: String
   slug: String
+  type: String
   excerpt: String
-  content: String
   language: String
   status: String
   publishedAt: DateTime
   seoTitle: String
   seoDescription: String
-  featuredImage: String
+  seoKeywords: String
+  socialTitle: String
+  socialDescription: String
+  socialImage: MediaFile
+  sections(where: SectionWhereInput! = {}, orderBy: [SectionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: SectionWhereUniqueInput): [Section!]
+  sectionsCount(where: SectionWhereInput! = {}): Int
+  featuredImage: MediaFile
   author: User
+  viewCount: Int
   createdAt: DateTime
   updatedAt: DateTime
 }
 
-input ContentWhereUniqueInput {
+input PageWhereUniqueInput {
   id: ID
   slug: String
 }
 
-input ContentWhereInput {
-  AND: [ContentWhereInput!]
-  OR: [ContentWhereInput!]
-  NOT: [ContentWhereInput!]
+input PageWhereInput {
+  AND: [PageWhereInput!]
+  OR: [PageWhereInput!]
+  NOT: [PageWhereInput!]
   id: IDFilter
   title: StringFilter
   slug: StringFilter
+  type: StringNullableFilter
   excerpt: StringFilter
-  content: StringFilter
   language: StringFilter
   status: StringNullableFilter
   publishedAt: DateTimeNullableFilter
   seoTitle: StringFilter
   seoDescription: StringFilter
-  featuredImage: StringFilter
+  seoKeywords: StringFilter
+  socialTitle: StringFilter
+  socialDescription: StringFilter
+  socialImage: MediaFileWhereInput
+  sections: SectionManyRelationFilter
+  featuredImage: MediaFileWhereInput
   author: UserWhereInput
+  viewCount: IntNullableFilter
   createdAt: DateTimeNullableFilter
   updatedAt: DateTimeNullableFilter
 }
 
-input ContentOrderByInput {
+input SectionManyRelationFilter {
+  every: SectionWhereInput
+  some: SectionWhereInput
+  none: SectionWhereInput
+}
+
+input IntNullableFilter {
+  equals: Int
+  in: [Int!]
+  notIn: [Int!]
+  lt: Int
+  lte: Int
+  gt: Int
+  gte: Int
+  not: IntNullableFilter
+}
+
+input PageOrderByInput {
   id: OrderDirection
   title: OrderDirection
   slug: OrderDirection
+  type: OrderDirection
   excerpt: OrderDirection
-  content: OrderDirection
   language: OrderDirection
   status: OrderDirection
   publishedAt: OrderDirection
   seoTitle: OrderDirection
   seoDescription: OrderDirection
-  featuredImage: OrderDirection
+  seoKeywords: OrderDirection
+  socialTitle: OrderDirection
+  socialDescription: OrderDirection
+  viewCount: OrderDirection
   createdAt: OrderDirection
   updatedAt: OrderDirection
 }
 
-input ContentUpdateInput {
+input PageUpdateInput {
   title: String
   slug: String
+  type: String
   excerpt: String
-  content: String
   language: String
   status: String
   publishedAt: DateTime
   seoTitle: String
   seoDescription: String
-  featuredImage: String
+  seoKeywords: String
+  socialTitle: String
+  socialDescription: String
+  socialImage: MediaFileRelateToOneForUpdateInput
+  sections: SectionRelateToManyForUpdateInput
+  featuredImage: MediaFileRelateToOneForUpdateInput
   author: UserRelateToOneForUpdateInput
+  viewCount: Int
   createdAt: DateTime
   updatedAt: DateTime
+}
+
+input MediaFileRelateToOneForUpdateInput {
+  create: MediaFileCreateInput
+  connect: MediaFileWhereUniqueInput
+  disconnect: Boolean
+}
+
+input SectionRelateToManyForUpdateInput {
+  disconnect: [SectionWhereUniqueInput!]
+  set: [SectionWhereUniqueInput!]
+  create: [SectionCreateInput!]
+  connect: [SectionWhereUniqueInput!]
 }
 
 input UserRelateToOneForUpdateInput {
@@ -232,25 +284,41 @@ input UserRelateToOneForUpdateInput {
   disconnect: Boolean
 }
 
-input ContentUpdateArgs {
-  where: ContentWhereUniqueInput!
-  data: ContentUpdateInput!
+input PageUpdateArgs {
+  where: PageWhereUniqueInput!
+  data: PageUpdateInput!
 }
 
-input ContentCreateInput {
+input PageCreateInput {
   title: String
   slug: String
+  type: String
   excerpt: String
-  content: String
   language: String
   status: String
   publishedAt: DateTime
   seoTitle: String
   seoDescription: String
-  featuredImage: String
+  seoKeywords: String
+  socialTitle: String
+  socialDescription: String
+  socialImage: MediaFileRelateToOneForCreateInput
+  sections: SectionRelateToManyForCreateInput
+  featuredImage: MediaFileRelateToOneForCreateInput
   author: UserRelateToOneForCreateInput
+  viewCount: Int
   createdAt: DateTime
   updatedAt: DateTime
+}
+
+input MediaFileRelateToOneForCreateInput {
+  create: MediaFileCreateInput
+  connect: MediaFileWhereUniqueInput
+}
+
+input SectionRelateToManyForCreateInput {
+  create: [SectionCreateInput!]
+  connect: [SectionWhereUniqueInput!]
 }
 
 input UserRelateToOneForCreateInput {
@@ -262,11 +330,19 @@ type Section {
   id: ID!
   name: String
   identifier: String
+  title: String
+  subtitle: String
   language: String
+  page: Page
   isActive: Boolean
   sortOrder: Int
+  backgroundColor: String
+  backgroundImage: MediaFile
+  cssClass: String
+  padding: String
   blocks(where: BlockWhereInput! = {}, orderBy: [BlockOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: BlockWhereUniqueInput): [Block!]
   blocksCount(where: BlockWhereInput! = {}): Int
+  settings: JSON
   createdAt: DateTime
 }
 
@@ -282,22 +358,18 @@ input SectionWhereInput {
   id: IDFilter
   name: StringFilter
   identifier: StringFilter
+  title: StringFilter
+  subtitle: StringFilter
   language: StringFilter
+  page: PageWhereInput
   isActive: BooleanFilter
   sortOrder: IntNullableFilter
+  backgroundColor: StringFilter
+  backgroundImage: MediaFileWhereInput
+  cssClass: StringFilter
+  padding: StringNullableFilter
   blocks: BlockManyRelationFilter
   createdAt: DateTimeNullableFilter
-}
-
-input IntNullableFilter {
-  equals: Int
-  in: [Int!]
-  notIn: [Int!]
-  lt: Int
-  lte: Int
-  gt: Int
-  gte: Int
-  not: IntNullableFilter
 }
 
 input BlockManyRelationFilter {
@@ -310,20 +382,39 @@ input SectionOrderByInput {
   id: OrderDirection
   name: OrderDirection
   identifier: OrderDirection
+  title: OrderDirection
+  subtitle: OrderDirection
   language: OrderDirection
   isActive: OrderDirection
   sortOrder: OrderDirection
+  backgroundColor: OrderDirection
+  cssClass: OrderDirection
+  padding: OrderDirection
   createdAt: OrderDirection
 }
 
 input SectionUpdateInput {
   name: String
   identifier: String
+  title: String
+  subtitle: String
   language: String
+  page: PageRelateToOneForUpdateInput
   isActive: Boolean
   sortOrder: Int
+  backgroundColor: String
+  backgroundImage: MediaFileRelateToOneForUpdateInput
+  cssClass: String
+  padding: String
   blocks: BlockRelateToManyForUpdateInput
+  settings: JSON
   createdAt: DateTime
+}
+
+input PageRelateToOneForUpdateInput {
+  create: PageCreateInput
+  connect: PageWhereUniqueInput
+  disconnect: Boolean
 }
 
 input BlockRelateToManyForUpdateInput {
@@ -341,11 +432,24 @@ input SectionUpdateArgs {
 input SectionCreateInput {
   name: String
   identifier: String
+  title: String
+  subtitle: String
   language: String
+  page: PageRelateToOneForCreateInput
   isActive: Boolean
   sortOrder: Int
+  backgroundColor: String
+  backgroundImage: MediaFileRelateToOneForCreateInput
+  cssClass: String
+  padding: String
   blocks: BlockRelateToManyForCreateInput
+  settings: JSON
   createdAt: DateTime
+}
+
+input PageRelateToOneForCreateInput {
+  create: PageCreateInput
+  connect: PageWhereUniqueInput
 }
 
 input BlockRelateToManyForCreateInput {
@@ -357,7 +461,20 @@ type Block {
   id: ID!
   title: String
   type: String
+  content: String
+  subtitle: String
+  buttonText: String
+  buttonUrl: String
+  image: MediaFile
+  video: MediaFile
+  gallery(where: MediaFileWhereInput! = {}, orderBy: [MediaFileOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MediaFileWhereUniqueInput): [MediaFile!]
+  galleryCount(where: MediaFileWhereInput! = {}): Int
+  layout: String
+  backgroundColor: String
+  textColor: String
+  cssClass: String
   section: Section
+  googleForm: GoogleForm
   sortOrder: Int
   isVisible: Boolean
   settings: JSON
@@ -375,16 +492,42 @@ input BlockWhereInput {
   id: IDFilter
   title: StringFilter
   type: StringFilter
+  content: StringFilter
+  subtitle: StringFilter
+  buttonText: StringFilter
+  buttonUrl: StringFilter
+  image: MediaFileWhereInput
+  video: MediaFileWhereInput
+  gallery: MediaFileManyRelationFilter
+  layout: StringNullableFilter
+  backgroundColor: StringFilter
+  textColor: StringFilter
+  cssClass: StringFilter
   section: SectionWhereInput
+  googleForm: GoogleFormWhereInput
   sortOrder: IntNullableFilter
   isVisible: BooleanFilter
   createdAt: DateTimeNullableFilter
+}
+
+input MediaFileManyRelationFilter {
+  every: MediaFileWhereInput
+  some: MediaFileWhereInput
+  none: MediaFileWhereInput
 }
 
 input BlockOrderByInput {
   id: OrderDirection
   title: OrderDirection
   type: OrderDirection
+  content: OrderDirection
+  subtitle: OrderDirection
+  buttonText: OrderDirection
+  buttonUrl: OrderDirection
+  layout: OrderDirection
+  backgroundColor: OrderDirection
+  textColor: OrderDirection
+  cssClass: OrderDirection
   sortOrder: OrderDirection
   isVisible: OrderDirection
   createdAt: OrderDirection
@@ -393,16 +536,41 @@ input BlockOrderByInput {
 input BlockUpdateInput {
   title: String
   type: String
+  content: String
+  subtitle: String
+  buttonText: String
+  buttonUrl: String
+  image: MediaFileRelateToOneForUpdateInput
+  video: MediaFileRelateToOneForUpdateInput
+  gallery: MediaFileRelateToManyForUpdateInput
+  layout: String
+  backgroundColor: String
+  textColor: String
+  cssClass: String
   section: SectionRelateToOneForUpdateInput
+  googleForm: GoogleFormRelateToOneForUpdateInput
   sortOrder: Int
   isVisible: Boolean
   settings: JSON
   createdAt: DateTime
 }
 
+input MediaFileRelateToManyForUpdateInput {
+  disconnect: [MediaFileWhereUniqueInput!]
+  set: [MediaFileWhereUniqueInput!]
+  create: [MediaFileCreateInput!]
+  connect: [MediaFileWhereUniqueInput!]
+}
+
 input SectionRelateToOneForUpdateInput {
   create: SectionCreateInput
   connect: SectionWhereUniqueInput
+  disconnect: Boolean
+}
+
+input GoogleFormRelateToOneForUpdateInput {
+  create: GoogleFormCreateInput
+  connect: GoogleFormWhereUniqueInput
   disconnect: Boolean
 }
 
@@ -414,16 +582,153 @@ input BlockUpdateArgs {
 input BlockCreateInput {
   title: String
   type: String
+  content: String
+  subtitle: String
+  buttonText: String
+  buttonUrl: String
+  image: MediaFileRelateToOneForCreateInput
+  video: MediaFileRelateToOneForCreateInput
+  gallery: MediaFileRelateToManyForCreateInput
+  layout: String
+  backgroundColor: String
+  textColor: String
+  cssClass: String
   section: SectionRelateToOneForCreateInput
+  googleForm: GoogleFormRelateToOneForCreateInput
   sortOrder: Int
   isVisible: Boolean
   settings: JSON
   createdAt: DateTime
 }
 
+input MediaFileRelateToManyForCreateInput {
+  create: [MediaFileCreateInput!]
+  connect: [MediaFileWhereUniqueInput!]
+}
+
 input SectionRelateToOneForCreateInput {
   create: SectionCreateInput
   connect: SectionWhereUniqueInput
+}
+
+input GoogleFormRelateToOneForCreateInput {
+  create: GoogleFormCreateInput
+  connect: GoogleFormWhereUniqueInput
+}
+
+type MediaFile {
+  id: ID!
+  name: String
+  alt: String
+  caption: String
+  url: String
+  filename: String
+  mimeType: String
+  filesize: Int
+  width: Int
+  height: Int
+  type: String
+  category: String
+  tags: String
+  seoTitle: String
+  isActive: Boolean
+  isFeatured: Boolean
+  usageCount: Int
+  createdAt: DateTime
+}
+
+input MediaFileWhereUniqueInput {
+  id: ID
+}
+
+input MediaFileWhereInput {
+  AND: [MediaFileWhereInput!]
+  OR: [MediaFileWhereInput!]
+  NOT: [MediaFileWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  alt: StringFilter
+  caption: StringFilter
+  url: StringFilter
+  filename: StringFilter
+  mimeType: StringFilter
+  filesize: IntNullableFilter
+  width: IntNullableFilter
+  height: IntNullableFilter
+  type: StringNullableFilter
+  category: StringNullableFilter
+  tags: StringFilter
+  seoTitle: StringFilter
+  isActive: BooleanFilter
+  isFeatured: BooleanFilter
+  usageCount: IntNullableFilter
+  createdAt: DateTimeNullableFilter
+}
+
+input MediaFileOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  alt: OrderDirection
+  caption: OrderDirection
+  url: OrderDirection
+  filename: OrderDirection
+  mimeType: OrderDirection
+  filesize: OrderDirection
+  width: OrderDirection
+  height: OrderDirection
+  type: OrderDirection
+  category: OrderDirection
+  tags: OrderDirection
+  seoTitle: OrderDirection
+  isActive: OrderDirection
+  isFeatured: OrderDirection
+  usageCount: OrderDirection
+  createdAt: OrderDirection
+}
+
+input MediaFileUpdateInput {
+  name: String
+  alt: String
+  caption: String
+  url: String
+  filename: String
+  mimeType: String
+  filesize: Int
+  width: Int
+  height: Int
+  type: String
+  category: String
+  tags: String
+  seoTitle: String
+  isActive: Boolean
+  isFeatured: Boolean
+  usageCount: Int
+  createdAt: DateTime
+}
+
+input MediaFileUpdateArgs {
+  where: MediaFileWhereUniqueInput!
+  data: MediaFileUpdateInput!
+}
+
+input MediaFileCreateInput {
+  name: String
+  alt: String
+  caption: String
+  url: String
+  filename: String
+  mimeType: String
+  filesize: Int
+  width: Int
+  height: Int
+  type: String
+  category: String
+  tags: String
+  seoTitle: String
+  isActive: Boolean
+  isFeatured: Boolean
+  usageCount: Int
+  createdAt: DateTime
 }
 
 type GoogleForm {
@@ -436,6 +741,9 @@ type GoogleForm {
   description: String
   buttonText: String
   displayType: String
+  buttonColor: String
+  buttonSize: String
+  clickCount: Int
   isActive: Boolean
   createdAt: DateTime
 }
@@ -457,6 +765,9 @@ input GoogleFormWhereInput {
   description: StringFilter
   buttonText: StringFilter
   displayType: StringNullableFilter
+  buttonColor: StringFilter
+  buttonSize: StringNullableFilter
+  clickCount: IntNullableFilter
   isActive: BooleanFilter
   createdAt: DateTimeNullableFilter
 }
@@ -471,6 +782,9 @@ input GoogleFormOrderByInput {
   description: OrderDirection
   buttonText: OrderDirection
   displayType: OrderDirection
+  buttonColor: OrderDirection
+  buttonSize: OrderDirection
+  clickCount: OrderDirection
   isActive: OrderDirection
   createdAt: OrderDirection
 }
@@ -484,6 +798,9 @@ input GoogleFormUpdateInput {
   description: String
   buttonText: String
   displayType: String
+  buttonColor: String
+  buttonSize: String
+  clickCount: Int
   isActive: Boolean
   createdAt: DateTime
 }
@@ -502,71 +819,9 @@ input GoogleFormCreateInput {
   description: String
   buttonText: String
   displayType: String
-  isActive: Boolean
-  createdAt: DateTime
-}
-
-type media {
-  id: ID!
-  name: String
-  url: String
-  alt: String
-  caption: String
-  type: String
-  isActive: Boolean
-  createdAt: DateTime
-}
-
-input mediaWhereUniqueInput {
-  id: ID
-}
-
-input mediaWhereInput {
-  AND: [mediaWhereInput!]
-  OR: [mediaWhereInput!]
-  NOT: [mediaWhereInput!]
-  id: IDFilter
-  name: StringFilter
-  url: StringFilter
-  alt: StringFilter
-  caption: StringFilter
-  type: StringNullableFilter
-  isActive: BooleanFilter
-  createdAt: DateTimeNullableFilter
-}
-
-input mediaOrderByInput {
-  id: OrderDirection
-  name: OrderDirection
-  url: OrderDirection
-  alt: OrderDirection
-  caption: OrderDirection
-  type: OrderDirection
-  isActive: OrderDirection
-  createdAt: OrderDirection
-}
-
-input mediaUpdateInput {
-  name: String
-  url: String
-  alt: String
-  caption: String
-  type: String
-  isActive: Boolean
-  createdAt: DateTime
-}
-
-input mediaUpdateArgs {
-  where: mediaWhereUniqueInput!
-  data: mediaUpdateInput!
-}
-
-input mediaCreateInput {
-  name: String
-  url: String
-  alt: String
-  caption: String
-  type: String
+  buttonColor: String
+  buttonSize: String
+  clickCount: Int
   isActive: Boolean
   createdAt: DateTime
 }
@@ -574,11 +829,16 @@ input mediaCreateInput {
 type Setting {
   id: ID!
   key: String
+  name: String
   value: String
+  defaultValue: String
+  category: String
   language: String
   type: String
   description: String
   isPublic: Boolean
+  isRequired: Boolean
+  validation: JSON
   updatedAt: DateTime
 }
 
@@ -593,32 +853,45 @@ input SettingWhereInput {
   NOT: [SettingWhereInput!]
   id: IDFilter
   key: StringFilter
+  name: StringFilter
   value: StringFilter
+  defaultValue: StringFilter
+  category: StringNullableFilter
   language: StringNullableFilter
   type: StringNullableFilter
   description: StringFilter
   isPublic: BooleanFilter
+  isRequired: BooleanFilter
   updatedAt: DateTimeNullableFilter
 }
 
 input SettingOrderByInput {
   id: OrderDirection
   key: OrderDirection
+  name: OrderDirection
   value: OrderDirection
+  defaultValue: OrderDirection
+  category: OrderDirection
   language: OrderDirection
   type: OrderDirection
   description: OrderDirection
   isPublic: OrderDirection
+  isRequired: OrderDirection
   updatedAt: OrderDirection
 }
 
 input SettingUpdateInput {
   key: String
+  name: String
   value: String
+  defaultValue: String
+  category: String
   language: String
   type: String
   description: String
   isPublic: Boolean
+  isRequired: Boolean
+  validation: JSON
   updatedAt: DateTime
 }
 
@@ -629,11 +902,16 @@ input SettingUpdateArgs {
 
 input SettingCreateInput {
   key: String
+  name: String
   value: String
+  defaultValue: String
+  category: String
   language: String
   type: String
   description: String
   isPublic: Boolean
+  isRequired: Boolean
+  validation: JSON
   updatedAt: DateTime
 }
 
@@ -826,7 +1104,7 @@ type MenuItem {
   requiresAuth: Boolean
   cssClass: String
   menu: Menu
-  content: Content
+  page: Page
   parentItem: MenuItem
   children(where: MenuItemWhereInput! = {}, orderBy: [MenuItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MenuItemWhereUniqueInput): [MenuItem!]
   childrenCount(where: MenuItemWhereInput! = {}): Int
@@ -856,7 +1134,7 @@ input MenuItemWhereInput {
   requiresAuth: BooleanFilter
   cssClass: StringFilter
   menu: MenuWhereInput
-  content: ContentWhereInput
+  page: PageWhereInput
   parentItem: MenuItemWhereInput
   children: MenuItemManyRelationFilter
   clickCount: IntNullableFilter
@@ -895,7 +1173,7 @@ input MenuItemUpdateInput {
   requiresAuth: Boolean
   cssClass: String
   menu: MenuRelateToOneForUpdateInput
-  content: ContentRelateToOneForUpdateInput
+  page: PageRelateToOneForUpdateInput
   parentItem: MenuItemRelateToOneForUpdateInput
   children: MenuItemRelateToManyForUpdateInput
   clickCount: Int
@@ -906,12 +1184,6 @@ input MenuItemUpdateInput {
 input MenuRelateToOneForUpdateInput {
   create: MenuCreateInput
   connect: MenuWhereUniqueInput
-  disconnect: Boolean
-}
-
-input ContentRelateToOneForUpdateInput {
-  create: ContentCreateInput
-  connect: ContentWhereUniqueInput
   disconnect: Boolean
 }
 
@@ -939,7 +1211,7 @@ input MenuItemCreateInput {
   requiresAuth: Boolean
   cssClass: String
   menu: MenuRelateToOneForCreateInput
-  content: ContentRelateToOneForCreateInput
+  page: PageRelateToOneForCreateInput
   parentItem: MenuItemRelateToOneForCreateInput
   children: MenuItemRelateToManyForCreateInput
   clickCount: Int
@@ -952,14 +1224,104 @@ input MenuRelateToOneForCreateInput {
   connect: MenuWhereUniqueInput
 }
 
-input ContentRelateToOneForCreateInput {
-  create: ContentCreateInput
-  connect: ContentWhereUniqueInput
-}
-
 input MenuItemRelateToOneForCreateInput {
   create: MenuItemCreateInput
   connect: MenuItemWhereUniqueInput
+}
+
+type Content {
+  id: ID!
+  title: String
+  slug: String
+  excerpt: String
+  content: String
+  language: String
+  status: String
+  publishedAt: DateTime
+  seoTitle: String
+  seoDescription: String
+  featuredImage: String
+  author: User
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContentWhereUniqueInput {
+  id: ID
+  slug: String
+}
+
+input ContentWhereInput {
+  AND: [ContentWhereInput!]
+  OR: [ContentWhereInput!]
+  NOT: [ContentWhereInput!]
+  id: IDFilter
+  title: StringFilter
+  slug: StringFilter
+  excerpt: StringFilter
+  content: StringFilter
+  language: StringFilter
+  status: StringNullableFilter
+  publishedAt: DateTimeNullableFilter
+  seoTitle: StringFilter
+  seoDescription: StringFilter
+  featuredImage: StringFilter
+  author: UserWhereInput
+  createdAt: DateTimeNullableFilter
+  updatedAt: DateTimeNullableFilter
+}
+
+input ContentOrderByInput {
+  id: OrderDirection
+  title: OrderDirection
+  slug: OrderDirection
+  excerpt: OrderDirection
+  content: OrderDirection
+  language: OrderDirection
+  status: OrderDirection
+  publishedAt: OrderDirection
+  seoTitle: OrderDirection
+  seoDescription: OrderDirection
+  featuredImage: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input ContentUpdateInput {
+  title: String
+  slug: String
+  excerpt: String
+  content: String
+  language: String
+  status: String
+  publishedAt: DateTime
+  seoTitle: String
+  seoDescription: String
+  featuredImage: String
+  author: UserRelateToOneForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input ContentUpdateArgs {
+  where: ContentWhereUniqueInput!
+  data: ContentUpdateInput!
+}
+
+input ContentCreateInput {
+  title: String
+  slug: String
+  excerpt: String
+  content: String
+  language: String
+  status: String
+  publishedAt: DateTime
+  seoTitle: String
+  seoDescription: String
+  featuredImage: String
+  author: UserRelateToOneForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
 }
 
 """
@@ -974,12 +1336,12 @@ type Mutation {
   updateUsers(data: [UserUpdateArgs!]!): [User]
   deleteUser(where: UserWhereUniqueInput!): User
   deleteUsers(where: [UserWhereUniqueInput!]!): [User]
-  createContent(data: ContentCreateInput!): Content
-  createContents(data: [ContentCreateInput!]!): [Content]
-  updateContent(where: ContentWhereUniqueInput!, data: ContentUpdateInput!): Content
-  updateContents(data: [ContentUpdateArgs!]!): [Content]
-  deleteContent(where: ContentWhereUniqueInput!): Content
-  deleteContents(where: [ContentWhereUniqueInput!]!): [Content]
+  createPage(data: PageCreateInput!): Page
+  createPages(data: [PageCreateInput!]!): [Page]
+  updatePage(where: PageWhereUniqueInput!, data: PageUpdateInput!): Page
+  updatePages(data: [PageUpdateArgs!]!): [Page]
+  deletePage(where: PageWhereUniqueInput!): Page
+  deletePages(where: [PageWhereUniqueInput!]!): [Page]
   createSection(data: SectionCreateInput!): Section
   createSections(data: [SectionCreateInput!]!): [Section]
   updateSection(where: SectionWhereUniqueInput!, data: SectionUpdateInput!): Section
@@ -992,18 +1354,18 @@ type Mutation {
   updateBlocks(data: [BlockUpdateArgs!]!): [Block]
   deleteBlock(where: BlockWhereUniqueInput!): Block
   deleteBlocks(where: [BlockWhereUniqueInput!]!): [Block]
+  createMediaFile(data: MediaFileCreateInput!): MediaFile
+  createMediaFiles(data: [MediaFileCreateInput!]!): [MediaFile]
+  updateMediaFile(where: MediaFileWhereUniqueInput!, data: MediaFileUpdateInput!): MediaFile
+  updateMediaFiles(data: [MediaFileUpdateArgs!]!): [MediaFile]
+  deleteMediaFile(where: MediaFileWhereUniqueInput!): MediaFile
+  deleteMediaFiles(where: [MediaFileWhereUniqueInput!]!): [MediaFile]
   createGoogleForm(data: GoogleFormCreateInput!): GoogleForm
   createGoogleForms(data: [GoogleFormCreateInput!]!): [GoogleForm]
   updateGoogleForm(where: GoogleFormWhereUniqueInput!, data: GoogleFormUpdateInput!): GoogleForm
   updateGoogleForms(data: [GoogleFormUpdateArgs!]!): [GoogleForm]
   deleteGoogleForm(where: GoogleFormWhereUniqueInput!): GoogleForm
   deleteGoogleForms(where: [GoogleFormWhereUniqueInput!]!): [GoogleForm]
-  createmedia(data: mediaCreateInput!): media
-  createMedia(data: [mediaCreateInput!]!): [media]
-  updatemedia(where: mediaWhereUniqueInput!, data: mediaUpdateInput!): media
-  updateMedia(data: [mediaUpdateArgs!]!): [media]
-  deletemedia(where: mediaWhereUniqueInput!): media
-  deleteMedia(where: [mediaWhereUniqueInput!]!): [media]
   createSetting(data: SettingCreateInput!): Setting
   createSettings(data: [SettingCreateInput!]!): [Setting]
   updateSetting(where: SettingWhereUniqueInput!, data: SettingUpdateInput!): Setting
@@ -1028,6 +1390,12 @@ type Mutation {
   updateMenuItems(data: [MenuItemUpdateArgs!]!): [MenuItem]
   deleteMenuItem(where: MenuItemWhereUniqueInput!): MenuItem
   deleteMenuItems(where: [MenuItemWhereUniqueInput!]!): [MenuItem]
+  createContent(data: ContentCreateInput!): Content
+  createContents(data: [ContentCreateInput!]!): [Content]
+  updateContent(where: ContentWhereUniqueInput!, data: ContentUpdateInput!): Content
+  updateContents(data: [ContentUpdateArgs!]!): [Content]
+  deleteContent(where: ContentWhereUniqueInput!): Content
+  deleteContents(where: [ContentWhereUniqueInput!]!): [Content]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
@@ -1055,20 +1423,21 @@ type Query {
   user(where: UserWhereUniqueInput!): User
   users(where: UserWhereInput! = {}, orderBy: [UserOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: UserWhereUniqueInput): [User!]
   usersCount(where: UserWhereInput! = {}): Int
-  content(where: ContentWhereUniqueInput!): Content
-  contents(where: ContentWhereInput! = {}, orderBy: [ContentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContentWhereUniqueInput): [Content!]
-  contentsCount(where: ContentWhereInput! = {}): Int
+  page(where: PageWhereUniqueInput!): Page
+  pages(where: PageWhereInput! = {}, orderBy: [PageOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PageWhereUniqueInput): [Page!]
+  pagesCount(where: PageWhereInput! = {}): Int
   section(where: SectionWhereUniqueInput!): Section
   sections(where: SectionWhereInput! = {}, orderBy: [SectionOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: SectionWhereUniqueInput): [Section!]
   sectionsCount(where: SectionWhereInput! = {}): Int
   block(where: BlockWhereUniqueInput!): Block
   blocks(where: BlockWhereInput! = {}, orderBy: [BlockOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: BlockWhereUniqueInput): [Block!]
   blocksCount(where: BlockWhereInput! = {}): Int
+  mediaFile(where: MediaFileWhereUniqueInput!): MediaFile
+  mediaFiles(where: MediaFileWhereInput! = {}, orderBy: [MediaFileOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MediaFileWhereUniqueInput): [MediaFile!]
+  mediaFilesCount(where: MediaFileWhereInput! = {}): Int
   googleForm(where: GoogleFormWhereUniqueInput!): GoogleForm
   googleForms(where: GoogleFormWhereInput! = {}, orderBy: [GoogleFormOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: GoogleFormWhereUniqueInput): [GoogleForm!]
   googleFormsCount(where: GoogleFormWhereInput! = {}): Int
-  media(where: mediaWhereInput! = {}, orderBy: [mediaOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: mediaWhereUniqueInput): [media!]
-  mediaCount(where: mediaWhereInput! = {}): Int
   setting(where: SettingWhereUniqueInput!): Setting
   settings(where: SettingWhereInput! = {}, orderBy: [SettingOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: SettingWhereUniqueInput): [Setting!]
   settingsCount(where: SettingWhereInput! = {}): Int
@@ -1081,6 +1450,9 @@ type Query {
   menuItem(where: MenuItemWhereUniqueInput!): MenuItem
   menuItems(where: MenuItemWhereInput! = {}, orderBy: [MenuItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MenuItemWhereUniqueInput): [MenuItem!]
   menuItemsCount(where: MenuItemWhereInput! = {}): Int
+  content(where: ContentWhereUniqueInput!): Content
+  contents(where: ContentWhereInput! = {}, orderBy: [ContentOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: ContentWhereUniqueInput): [Content!]
+  contentsCount(where: ContentWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
 }

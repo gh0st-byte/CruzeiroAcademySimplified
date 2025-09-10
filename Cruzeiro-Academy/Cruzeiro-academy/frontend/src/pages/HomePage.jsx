@@ -52,12 +52,12 @@ const HomePage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center p-8">
-          <h1 className="text-2xl font-bold text-gray-600 mb-4">Homepage Vazia</h1>
+          <h1 className="text-2xl font-bold text-gray-600 mb-4">teste funcionou</h1>
           <p className="text-gray-500 mb-2">Nenhuma seção encontrada para este idioma.</p>
           <p className="text-sm text-gray-400">Idioma: {lang || 'pt-BR'}</p>
           <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
             <p className="text-sm text-yellow-800">
-              💡 Vá para o <a href="http://localhost:3000/admin" target="_blank" className="underline">Admin Keystone</a> e crie algumas seções e blocos.
+               <a href="http://localhost:3000/admin" target="_blank" className="underline">verifique o cms</a> possivel erro de banco de dados.
             </p>
           </div>
         </div>

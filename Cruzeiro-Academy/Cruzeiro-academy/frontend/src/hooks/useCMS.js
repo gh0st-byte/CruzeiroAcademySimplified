@@ -2,10 +2,11 @@ import { useQuery } from '@apollo/client';
 import { useParams } from 'react-router-dom';
 import { 
   GET_HOMEPAGE, 
+  GET_PAGE_BY_SLUG,
   GET_MENU, 
   GET_SITE_SETTINGS, 
   GET_GOOGLE_FORMS,
-  GET_CONTENT_BY_SLUG 
+  GET_MEDIA
 } from '../lib/queries';
 
 export const useCMS = (type = 'homepage', options = {}) => {
@@ -15,10 +16,11 @@ export const useCMS = (type = 'homepage', options = {}) => {
   // Seleciona a query baseada no tipo
   const queries = {
     homepage: GET_HOMEPAGE,
+    page: GET_PAGE_BY_SLUG,
     menu: GET_MENU,
     settings: GET_SITE_SETTINGS,
     googleForms: GET_GOOGLE_FORMS,
-    content: GET_CONTENT_BY_SLUG
+    media: GET_MEDIA
   };
 
   const query = queries[type];
@@ -30,8 +32,13 @@ export const useCMS = (type = 'homepage', options = {}) => {
     variables.location = options.location || 'header';
   }
   
-  if (type === 'content') {
+  if (type === 'page') {
     variables.slug = options.slug;
+  }
+
+  if (type === 'media') {
+    if (options.category) variables.category = options.category;
+    if (options.mediaType) variables.type = options.mediaType;
   }
 
   const { data, loading, error, refetch } = useQuery(query, {
@@ -47,10 +54,25 @@ export const useCMS = (type = 'homepage', options = {}) => {
 
     switch (type) {
       case 'homepage':
-        // Retorna as sections com blocks
+        // Prioriza página homepage, senão usa seções diretas
+        const homePage = data.pages?.[0];
+        if (homePage) {
+          return {
+            ...homePage,
+            sections: homePage.sections || [],
+            blocks: homePage.sections?.flatMap(section => 
+              section.blocks?.map(block => ({
+                ...block,
+                sectionId: section.id,
+                sectionName: section.name
+              })) || []
+            ) || []
+          };
+        }
+        
+        // Fallback para seções diretas
         return {
           sections: data.sections || [],
-          // Para compatibilidade, também cria um array de blocks
           blocks: data.sections?.flatMap(section => 
             section.blocks?.map(block => ({
               ...block,
@@ -60,23 +82,43 @@ export const useCMS = (type = 'homepage', options = {}) => {
           ) || []
         };
         
+      case 'page':
+        return data.pages?.[0] || null;
+        
       case 'menu':
         return data.menus?.[0] || null;
         
       case 'settings':
-        // Converte array de settings em objeto
+        // Converte array de settings em objeto organizado
         const settingsArray = data.settings || [];
-        const settingsObject = {};
+        const settingsObject = {
+          global: {},
+          byCategory: {}
+        };
+        
         settingsArray.forEach(setting => {
-          settingsObject[setting.key] = setting.value;
+          // Adiciona ao objeto global
+          settingsObject.global[setting.key] = setting.value || setting.defaultValue;
+          
+          // Organiza por categoria
+          if (!settingsObject.byCategory[setting.category]) {
+            settingsObject.byCategory[setting.category] = {};
+          }
+          settingsObject.byCategory[setting.category][setting.key] = {
+            value: setting.value || setting.defaultValue,
+            name: setting.name,
+            type: setting.type,
+            description: setting.description
+          };
         });
+        
         return settingsObject;
         
       case 'googleForms':
         return data.googleForms || [];
         
-      case 'content':
-        return data.contents?.[0] || null;
+      case 'media':
+        return data.mediaFiles || [];
         
       default:
         return data;
