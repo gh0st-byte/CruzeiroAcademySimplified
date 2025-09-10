@@ -422,8 +422,9 @@ Este projeto é proprietário da Cruzeiro Esporte Clube - SAF.
 ##  Suporte
 
 Para suporte técnico, entre em contato com a equipe de desenvolvimento:
-- Email: marco.repoles@cruzeiro.com.br
+ *<h3> Email: <i> Marco.Repoles@cruzeiro.com.br </i> </h3>
+ <br>
 
 ---
 
-**Cruzeiro Academy** - Formando campeões dentro e fora de campo 
+**Cruzeiro Academy** - *Formando campeões dentro e fora de campo*

@@ -708,6 +708,260 @@ input PageViewCreateInput {
   timestamp: DateTime
 }
 
+type Menu {
+  id: ID!
+  name: String
+  identifier: String
+  language: String
+  location: String
+  description: String
+  isActive: Boolean
+  cssClass: String
+  maxDepth: Int
+  items(where: MenuItemWhereInput! = {}, orderBy: [MenuItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MenuItemWhereUniqueInput): [MenuItem!]
+  itemsCount(where: MenuItemWhereInput! = {}): Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input MenuWhereUniqueInput {
+  id: ID
+  identifier: String
+}
+
+input MenuWhereInput {
+  AND: [MenuWhereInput!]
+  OR: [MenuWhereInput!]
+  NOT: [MenuWhereInput!]
+  id: IDFilter
+  name: StringFilter
+  identifier: StringFilter
+  language: StringFilter
+  location: StringNullableFilter
+  description: StringFilter
+  isActive: BooleanFilter
+  cssClass: StringFilter
+  maxDepth: IntNullableFilter
+  items: MenuItemManyRelationFilter
+  createdAt: DateTimeNullableFilter
+  updatedAt: DateTimeNullableFilter
+}
+
+input MenuItemManyRelationFilter {
+  every: MenuItemWhereInput
+  some: MenuItemWhereInput
+  none: MenuItemWhereInput
+}
+
+input MenuOrderByInput {
+  id: OrderDirection
+  name: OrderDirection
+  identifier: OrderDirection
+  language: OrderDirection
+  location: OrderDirection
+  description: OrderDirection
+  isActive: OrderDirection
+  cssClass: OrderDirection
+  maxDepth: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input MenuUpdateInput {
+  name: String
+  identifier: String
+  language: String
+  location: String
+  description: String
+  isActive: Boolean
+  cssClass: String
+  maxDepth: Int
+  items: MenuItemRelateToManyForUpdateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input MenuItemRelateToManyForUpdateInput {
+  disconnect: [MenuItemWhereUniqueInput!]
+  set: [MenuItemWhereUniqueInput!]
+  create: [MenuItemCreateInput!]
+  connect: [MenuItemWhereUniqueInput!]
+}
+
+input MenuUpdateArgs {
+  where: MenuWhereUniqueInput!
+  data: MenuUpdateInput!
+}
+
+input MenuCreateInput {
+  name: String
+  identifier: String
+  language: String
+  location: String
+  description: String
+  isActive: Boolean
+  cssClass: String
+  maxDepth: Int
+  items: MenuItemRelateToManyForCreateInput
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input MenuItemRelateToManyForCreateInput {
+  create: [MenuItemCreateInput!]
+  connect: [MenuItemWhereUniqueInput!]
+}
+
+type MenuItem {
+  id: ID!
+  label: String
+  url: String
+  type: String
+  target: String
+  icon: String
+  description: String
+  order: Int
+  isActive: Boolean
+  isHighlighted: Boolean
+  requiresAuth: Boolean
+  cssClass: String
+  menu: Menu
+  content: Content
+  parentItem: MenuItem
+  children(where: MenuItemWhereInput! = {}, orderBy: [MenuItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MenuItemWhereUniqueInput): [MenuItem!]
+  childrenCount(where: MenuItemWhereInput! = {}): Int
+  clickCount: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input MenuItemWhereUniqueInput {
+  id: ID
+}
+
+input MenuItemWhereInput {
+  AND: [MenuItemWhereInput!]
+  OR: [MenuItemWhereInput!]
+  NOT: [MenuItemWhereInput!]
+  id: IDFilter
+  label: StringFilter
+  url: StringFilter
+  type: StringNullableFilter
+  target: StringNullableFilter
+  icon: StringFilter
+  description: StringFilter
+  order: IntNullableFilter
+  isActive: BooleanFilter
+  isHighlighted: BooleanFilter
+  requiresAuth: BooleanFilter
+  cssClass: StringFilter
+  menu: MenuWhereInput
+  content: ContentWhereInput
+  parentItem: MenuItemWhereInput
+  children: MenuItemManyRelationFilter
+  clickCount: IntNullableFilter
+  createdAt: DateTimeNullableFilter
+  updatedAt: DateTimeNullableFilter
+}
+
+input MenuItemOrderByInput {
+  id: OrderDirection
+  label: OrderDirection
+  url: OrderDirection
+  type: OrderDirection
+  target: OrderDirection
+  icon: OrderDirection
+  description: OrderDirection
+  order: OrderDirection
+  isActive: OrderDirection
+  isHighlighted: OrderDirection
+  requiresAuth: OrderDirection
+  cssClass: OrderDirection
+  clickCount: OrderDirection
+  createdAt: OrderDirection
+  updatedAt: OrderDirection
+}
+
+input MenuItemUpdateInput {
+  label: String
+  url: String
+  type: String
+  target: String
+  icon: String
+  description: String
+  order: Int
+  isActive: Boolean
+  isHighlighted: Boolean
+  requiresAuth: Boolean
+  cssClass: String
+  menu: MenuRelateToOneForUpdateInput
+  content: ContentRelateToOneForUpdateInput
+  parentItem: MenuItemRelateToOneForUpdateInput
+  children: MenuItemRelateToManyForUpdateInput
+  clickCount: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input MenuRelateToOneForUpdateInput {
+  create: MenuCreateInput
+  connect: MenuWhereUniqueInput
+  disconnect: Boolean
+}
+
+input ContentRelateToOneForUpdateInput {
+  create: ContentCreateInput
+  connect: ContentWhereUniqueInput
+  disconnect: Boolean
+}
+
+input MenuItemRelateToOneForUpdateInput {
+  create: MenuItemCreateInput
+  connect: MenuItemWhereUniqueInput
+  disconnect: Boolean
+}
+
+input MenuItemUpdateArgs {
+  where: MenuItemWhereUniqueInput!
+  data: MenuItemUpdateInput!
+}
+
+input MenuItemCreateInput {
+  label: String
+  url: String
+  type: String
+  target: String
+  icon: String
+  description: String
+  order: Int
+  isActive: Boolean
+  isHighlighted: Boolean
+  requiresAuth: Boolean
+  cssClass: String
+  menu: MenuRelateToOneForCreateInput
+  content: ContentRelateToOneForCreateInput
+  parentItem: MenuItemRelateToOneForCreateInput
+  children: MenuItemRelateToManyForCreateInput
+  clickCount: Int
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input MenuRelateToOneForCreateInput {
+  create: MenuCreateInput
+  connect: MenuWhereUniqueInput
+}
+
+input ContentRelateToOneForCreateInput {
+  create: ContentCreateInput
+  connect: ContentWhereUniqueInput
+}
+
+input MenuItemRelateToOneForCreateInput {
+  create: MenuItemCreateInput
+  connect: MenuItemWhereUniqueInput
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -762,6 +1016,18 @@ type Mutation {
   updatePageViews(data: [PageViewUpdateArgs!]!): [PageView]
   deletePageView(where: PageViewWhereUniqueInput!): PageView
   deletePageViews(where: [PageViewWhereUniqueInput!]!): [PageView]
+  createMenu(data: MenuCreateInput!): Menu
+  createMenus(data: [MenuCreateInput!]!): [Menu]
+  updateMenu(where: MenuWhereUniqueInput!, data: MenuUpdateInput!): Menu
+  updateMenus(data: [MenuUpdateArgs!]!): [Menu]
+  deleteMenu(where: MenuWhereUniqueInput!): Menu
+  deleteMenus(where: [MenuWhereUniqueInput!]!): [Menu]
+  createMenuItem(data: MenuItemCreateInput!): MenuItem
+  createMenuItems(data: [MenuItemCreateInput!]!): [MenuItem]
+  updateMenuItem(where: MenuItemWhereUniqueInput!, data: MenuItemUpdateInput!): MenuItem
+  updateMenuItems(data: [MenuItemUpdateArgs!]!): [MenuItem]
+  deleteMenuItem(where: MenuItemWhereUniqueInput!): MenuItem
+  deleteMenuItems(where: [MenuItemWhereUniqueInput!]!): [MenuItem]
   endSession: Boolean!
   authenticateUserWithPassword(email: String!, password: String!): UserAuthenticationWithPasswordResult
   createInitialUser(data: CreateInitialUserInput!): UserAuthenticationWithPasswordSuccess!
@@ -809,6 +1075,12 @@ type Query {
   pageView(where: PageViewWhereUniqueInput!): PageView
   pageViews(where: PageViewWhereInput! = {}, orderBy: [PageViewOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: PageViewWhereUniqueInput): [PageView!]
   pageViewsCount(where: PageViewWhereInput! = {}): Int
+  menu(where: MenuWhereUniqueInput!): Menu
+  menus(where: MenuWhereInput! = {}, orderBy: [MenuOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MenuWhereUniqueInput): [Menu!]
+  menusCount(where: MenuWhereInput! = {}): Int
+  menuItem(where: MenuItemWhereUniqueInput!): MenuItem
+  menuItems(where: MenuItemWhereInput! = {}, orderBy: [MenuItemOrderByInput!]! = [], take: Int, skip: Int! = 0, cursor: MenuItemWhereUniqueInput): [MenuItem!]
+  menuItemsCount(where: MenuItemWhereInput! = {}): Int
   keystone: KeystoneMeta!
   authenticatedItem: AuthenticatedItem
 }

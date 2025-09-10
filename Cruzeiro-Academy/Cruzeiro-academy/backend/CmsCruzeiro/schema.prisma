@@ -24,21 +24,22 @@ model User {
 }
 
 model Content {
-  id             String    @id @default(cuid())
-  title          String    @default("")
-  slug           String    @unique @default("")
-  excerpt        String    @default("")
-  content        String    @default("")
-  language       String    @default("pt-BR")
-  status         String?   @default("draft")
-  publishedAt    DateTime?
-  seoTitle       String    @default("")
-  seoDescription String    @default("")
-  featuredImage  String    @default("")
-  author         User?     @relation("Content_author", fields: [authorId], references: [id])
-  authorId       String?   @map("author")
-  createdAt      DateTime? @default(now())
-  updatedAt      DateTime? @default(now())
+  id                    String     @id @default(cuid())
+  title                 String     @default("")
+  slug                  String     @unique @default("")
+  excerpt               String     @default("")
+  content               String     @default("")
+  language              String     @default("pt-BR")
+  status                String?    @default("draft")
+  publishedAt           DateTime?
+  seoTitle              String     @default("")
+  seoDescription        String     @default("")
+  featuredImage         String     @default("")
+  author                User?      @relation("Content_author", fields: [authorId], references: [id])
+  authorId              String?    @map("author")
+  createdAt             DateTime?  @default(now())
+  updatedAt             DateTime?  @default(now())
+  from_MenuItem_content MenuItem[] @relation("MenuItem_content")
 
   @@index([authorId])
 }
@@ -112,4 +113,48 @@ model PageView {
   ipAddress String   @default("")
   referrer  String   @default("")
   timestamp DateTime @default(now())
+}
+
+model Menu {
+  id          String     @id @default(cuid())
+  name        String     @default("")
+  identifier  String     @unique @default("")
+  language    String     @default("pt-BR")
+  location    String?    @default("header")
+  description String     @default("")
+  isActive    Boolean    @default(true)
+  cssClass    String     @default("")
+  maxDepth    Int?       @default(3)
+  items       MenuItem[] @relation("MenuItem_menu")
+  createdAt   DateTime?  @default(now())
+  updatedAt   DateTime?  @default(now())
+}
+
+model MenuItem {
+  id            String     @id @default(cuid())
+  label         String     @default("")
+  url           String     @default("")
+  type          String?    @default("internal")
+  target        String?    @default("_self")
+  icon          String     @default("")
+  description   String     @default("")
+  order         Int?       @default(0)
+  isActive      Boolean    @default(true)
+  isHighlighted Boolean    @default(false)
+  requiresAuth  Boolean    @default(false)
+  cssClass      String     @default("")
+  menu          Menu?      @relation("MenuItem_menu", fields: [menuId], references: [id])
+  menuId        String?    @map("menu")
+  content       Content?   @relation("MenuItem_content", fields: [contentId], references: [id])
+  contentId     String?    @map("content")
+  parentItem    MenuItem?  @relation("MenuItem_parentItem", fields: [parentItemId], references: [id])
+  parentItemId  String?    @map("parentItem")
+  children      MenuItem[] @relation("MenuItem_parentItem")
+  clickCount    Int?       @default(0)
+  createdAt     DateTime?  @default(now())
+  updatedAt     DateTime?  @default(now())
+
+  @@index([menuId])
+  @@index([contentId])
+  @@index([parentItemId])
 }

@@ -1,10 +1,10 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_CMS_API_URL || 'http://localhost:3000/api/graphql',
+  uri: '/api/graphql', // ← Usa proxy do Vite ao invés de localhost:3000
 });
 
-export const apolloClient = new ApolloClient({
+export const client = new ApolloClient({
   link: httpLink,
   cache: new InMemoryCache(),
   defaultOptions: {
@@ -16,3 +16,5 @@ export const apolloClient = new ApolloClient({
     },
   },
 });
+
+export default client;

@@ -1,40 +1,100 @@
-import { useQuery } from '@apollo/client';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { GET_HOMEPAGE_SECTIONS } from '@/lib/queries';
-import { BlockRenderer } from '@/components/blocks';
-import { Loading } from '@/components/ui/Loading';
+import { useCMS } from '../hooks/useCMS';
+import BlockRenderer from '../components/blocks/BlockRenderer';
 
-export function HomePage() {
+const HomePage = () => {
   const { lang } = useParams();
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
   
-  const { data, loading, error } = useQuery(GET_HOMEPAGE_SECTIONS, {
-    variables: { language: lang },
-  });
+  // Busca dados da homepage
+  const { data: pageData, loading, error } = useCMS('homepage');
 
-  if (loading) return <Loading />;
-  if (error) return <div>Error: {error.message}</div>;
+  console.log('Homepage data:', pageData); // Debug
 
-  const sections = data?.sections || [];
+  // Sincroniza idioma
+  React.useEffect(() => {
+    if (lang && lang !== i18n.language) {
+      i18n.changeLanguage(lang);
+    }
+  }, [lang, i18n]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Carregando homepage...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Erro na Homepage</h1>
+          <p className="text-gray-600 mb-4">{error.message}</p>
+          <details className="text-left">
+            <summary className="cursor-pointer">Ver detalhes do erro</summary>
+            <pre className="text-xs mt-2 p-4 bg-gray-100 rounded overflow-auto">
+              {JSON.stringify(error, null, 2)}
+            </pre>
+          </details>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pageData || (!pageData.sections?.length && !pageData.blocks?.length)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8">
+          <h1 className="text-2xl font-bold text-gray-600 mb-4">Homepage Vazia</h1>
+          <p className="text-gray-500 mb-2">Nenhuma seção encontrada para este idioma.</p>
+          <p className="text-sm text-gray-400">Idioma: {lang || 'pt-BR'}</p>
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-sm text-yellow-800">
+              💡 Vá para o <a href="http://localhost:3000/admin" target="_blank" className="underline">Admin Keystone</a> e crie algumas seções e blocos.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen">
-      {sections.map((section) => (
+    <div className="homepage">
+      {/* Renderiza por sections */}
+      {pageData.sections?.map((section) => (
         <section 
-          key={section.id} 
-          id={section.identifier}
-          className="py-8 md:py-12"
+          key={section.id}
+          id={section.identifier || `section-\${section.id}`}
+          className="section py-8 md:py-12"
         >
           <div className="container mx-auto px-4">
-            {section.blocks.map((block) => (
-              <div key={block.id} className="mb-8">
-                <BlockRenderer block={block} />
-              </div>
-            ))}
+            <BlockRenderer 
+              blocks={section.blocks || []} 
+              language={lang || 'pt-BR'}
+              sectionData={section}
+            />
           </div>
         </section>
       ))}
+      
+      {/* OU renderiza todos os blocks juntos (fallback) */}
+      {!pageData.sections?.length && pageData.blocks?.length && (
+        <div className="container mx-auto px-4 py-8">
+          <BlockRenderer 
+            blocks={pageData.blocks} 
+            language={lang || 'pt-BR'}
+          />
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default HomePage;

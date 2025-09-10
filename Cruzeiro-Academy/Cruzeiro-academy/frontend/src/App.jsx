@@ -1,42 +1,32 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
-import { apolloClient } from './lib/apollo';
-import { Layout } from './components/layout/Layout';
-import { HomePage } from './pages/HomePage';
-import { ContentPage } from './pages/ContentPage';
-import { NotFound } from './pages/NotFound';
-import { useTranslation } from 'react-i18next';
-import './lib/i18n';
-import './styles/index.css';
+import { client } from './lib/apollo.jsx';
+import './i18n';
 
-const SUPPORTED_LANGUAGES = ['pt-BR', 'en-US', 'es-ES', 'ja-JP', 'th-TH'];
+import HomePage from './pages/HomePage';
+
+const Loading = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 function App() {
-  const { i18n } = useTranslation();
-
   return (
-    <ApolloProvider client={apolloClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Redirect root to default language */}
-          <Route path="/" element={<Navigate to="/pt-BR" replace />} />
-          
-          {/* Language-based routes */}
-          {SUPPORTED_LANGUAGES.map(lang => (
-            <Route key={lang} path={`/\${lang}`} element={<Layout />}>
-              <Route index element={<HomePage />} />
-              <Route path="content/:slug" element={<ContentPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          ))}
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/pt-BR" replace />} />
-        </Routes>
-      </BrowserRouter>
+    <ApolloProvider client={client}>
+      <Router>
+        <Suspense fallback={<Loading />}>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/:lang" element={<HomePage />} />
+            </Routes>
+          </div>
+        </Suspense>
+      </Router>
     </ApolloProvider>
   );
 }
 
 export default App;
-
